@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testy PČR</title>
+  <style>
+    :root {
+      --bg: #0b1220;
+      --panel: #111827;
+      --panel-2: #1f2937;
+      --line: #334155;
+      --text: #e5e7eb;
+      --muted: #94a3b8;
+      --primary: #2563eb;
+      --primary-2: #1d4ed8;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --warning: #f59e0b;
+      --card: rgba(17, 24, 39, 0.95);
+      --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(37,99,235,.18), transparent 30%),
+        radial-gradient(circle at top left, rgba(22,163,74,.08), transparent 25%),
+        linear-gradient(180deg, #0b1220, #0f172a);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .hidden { display: none !important; }
+    .container {
+      width: min(1200px, calc(100% - 32px));
+      margin: 0 auto;
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(10px);
+      background: rgba(11, 18, 32, 0.8);
+      border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+    }
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      letter-spacing: .02em;
+    }
+    .logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary), #0ea5e9);
+      box-shadow: var(--shadow);
+      font-size: 18px;
+    }
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn, button {
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+    .btn:hover, button:hover { transform: translateY(-1px); }
+    .btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: white; }
+    .btn-secondary { background: rgba(148,163,184,.12); color: var(--text); border: 1px solid rgba(148,163,184,.2); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-success { background: var(--success); color: #fff; }
+    .btn-warning { background: var(--warning); color: #111827; }
+
+    main { padding: 28px 0 48px; }
+    .hero {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 24px;
+      align-items: stretch;
+      margin-top: 22px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid rgba(148,163,184,.14);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+    .hero h1 { font-size: clamp(34px, 4vw, 56px); margin: 0 0 16px; line-height: 1.05; }
+    .hero p { color: var(--muted); font-size: 18px; line-height: 1.6; }
+    .hero .actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 22px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 24px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    .muted { color: var(--muted); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      border: 1px solid rgba(148,163,184,.2);
+      background: rgba(148,163,184,.1);
+    }
+    .badge.success { color: #bbf7d0; background: rgba(22,163,74,.15); border-color: rgba(22,163,74,.25); }
+    .badge.danger { color: #fecaca; background: rgba(220,38,38,.15); border-color: rgba(220,38,38,.25); }
+    .badge.warning { color: #fde68a; background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.25); }
+    .section-title { font-size: 24px; margin: 0 0 16px; }
+    .input-group { display: grid; gap: 8px; margin-bottom: 14px; }
+    label { font-weight: 600; }
+    input, textarea, select {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: rgba(15,23,42,.9);
+      color: var(--text);
+      padding: 12px 14px;
+      font: inherit;
+    }
+    textarea { min-height: 96px; resize: vertical; }
+    .auth-wrap {
+      width: min(560px, 100%);
+      margin: 24px auto 0;
+    }
+    .small { font-size: 14px; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+    .stat .value { font-size: 32px; font-weight: 800; margin-top: 8px; }
+    .dashboard-grid { display: grid; grid-template-columns: 280px 1fr; gap: 18px; }
+    .sidebar { padding: 14px; }
+    .menu { display: grid; gap: 8px; }
+    .menu button {
+      width: 100%;
+      text-align: left;
+      background: rgba(148,163,184,.08);
+      color: var(--text);
+      border: 1px solid transparent;
+    }
+    .menu button.active { background: rgba(37,99,235,.15); border-color: rgba(37,99,235,.28); }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid rgba(148,163,184,.12);
+      vertical-align: top;
+    }
+    th { color: #cbd5e1; font-size: 13px; text-transform: uppercase; letter-spacing: .04em; }
+    .table-wrap { overflow: auto; }
+    .question-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+    .timer {
+      font-size: 24px;
+      font-weight: 800;
+      color: #dbeafe;
+    }
+    .progressbar {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(148,163,184,.12);
+      overflow: hidden;
+      margin: 8px 0 18px;
+    }
+    .progressbar > div {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), #0ea5e9);
+      width: 0%;
+      transition: width .25s ease;
+    }
+    .options { display: grid; gap: 12px; margin-top: 18px; }
+    .option {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(148,163,184,.15);
+      background: rgba(15,23,42,.72);
+      cursor: pointer;
+    }
+    .option.correct { border-color: rgba(22,163,74,.5); background: rgba(22,163,74,.12); }
+    .option.incorrect { border-color: rgba(220,38,38,.45); background: rgba(220,38,38,.12); }
+    .feedback {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 14px;
+      display: none;
+      font-weight: 600;
+    }
+    .feedback.show { display: block; }
+    .feedback.correct { background: rgba(22,163,74,.12); color: #bbf7d0; border: 1px solid rgba(22,163,74,.28); }
+    .feedback.incorrect { background: rgba(220,38,38,.12); color: #fecaca; border: 1px solid rgba(220,38,38,.28); }
+    .feedback.info { background: rgba(37,99,235,.12); color: #dbeafe; border: 1px solid rgba(37,99,235,.28); }
+    .row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+    .space { height: 12px; }
+    .image-preview {
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(15,23,42,.8);
+      margin: 14px 0;
+    }
+    .pill-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(148,163,184,.08);
+      border: 1px solid rgba(148,163,184,.16);
+      font-size: 13px;
+    }
+    .footer-note { margin-top: 24px; color: var(--muted); font-size: 14px; }
+    .answer-result-correct {
+      color: #bbf7d0;
+      background: rgba(22,163,74,.14);
+      border: 1px solid rgba(22,163,74,.28);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .answer-result-wrong {
+      color: #fecaca;
+      background: rgba(220,38,38,.14);
+      border: 1px solid rgba(220,38,38,.28);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .admin-answer-card {
+      margin-top: 14px;
+      padding: 16px;
+      border-radius: 16px;
+      background: rgba(15,23,42,.72);
+      border: 1px solid rgba(148,163,184,.14);
+    }
+    .admin-answer-card.correct {
+      border-color: rgba(22,163,74,.35);
+      background: rgba(22,163,74,.08);
+    }
+    .admin-answer-card.wrong {
+      border-color: rgba(220,38,38,.35);
+      background: rgba(220,38,38,.08);
+    }
+    .question-nav { display: flex; justify-content: space-between; gap: 12px; margin-top: 22px; }
+
+    @media (max-width: 980px) {
+      .hero, .dashboard-grid, .grid-3, .grid-2, .stats { grid-template-columns: 1fr; }
+      .topbar-inner { align-items: flex-start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <div class="logo">PČR</div>
+        <div>
+          <div>ÚPVSP</div>
+          <div class="small muted">Online testovací systém</div>
+        </div>
+      </div>
+      <div class="nav-actions" id="topActions"></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section id="screen-home">
+      <div class="hero">
+        <div class="card">
+          <span class="badge">Moderní systém pro uchazeče</span>
+          <h1>Online testy pro PČR</h1>
+          <p>
+            Kompletní testovací portál pro přípravu a správu uchazečů. Registrace podléhá schválení administrátorem,
+            testy jsou bodované, časované a výsledky se ukládají do systému.
+          </p>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="showScreen('register')">Registrovat se</button>
+            <button class="btn btn-secondary" onclick="showScreen('login')">Přihlášení</button>
+          </div>
+          <div class="grid-3">
+            <div class="card">
+              <div class="badge">30 otázek</div>
+              <p class="small muted">Každý test má přesně 30 otázek a 50 bodů.</p>
+            </div>
+            <div class="card">
+              <div class="badge">45 minut</div>
+              <p class="small muted">Časový limit se počítá pro celý test.</p>
+            </div>
+            <div class="card">
+              <div class="badge">4 kategorie</div>
+              <p class="small muted">Psychotesty, zákony, zdravověda a doprava.</p>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="section-title">Jak to funguje</h2>
+          <div class="grid-2">
+            <div class="card">
+              <strong>1. Registrace</strong>
+              <p class="small muted">Uživatel se zaregistruje a počká na schválení administrátorem.</p>
+            </div>
+            <div class="card">
+              <strong>2. Aktivace účtu</strong>
+              <p class="small muted">Admin může účet schválit, zamítnout nebo vytvořit nový účet ručně.</p>
+            </div>
+            <div class="card">
+              <strong>3. Test</strong>
+              <p class="small muted">Po přihlášení je možné spustit časovaný test s okamžitou zpětnou vazbou.</p>
+            </div>
+            <div class="card">
+              <strong>4. Výsledek</strong>
+              <p class="small muted">Body, chyby, stav splnil/nesplnil a detailní historie pokusů.</p>
+            </div>
+          </div>
+          <p class="footer-note">Policie ČR – Krajské ředitelství hlavního města Prahy
+Gratulujeme vám k dosažení této závěrečné fáze.
+
+Tento test je posledním krokem, který vás dělí od úspěšného zakončení vaší přípravy.
+
+Přistupujte k němu s chladnou hlavou a soustředěním, které je pro práci u policie klíčové.
+
+Věříme ve vaše schopnosti.
+
+Hodně štěstí!</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-register" class="hidden auth-wrap">
+      <div class="card">
+        <h2 class="section-title">Registrace</h2>
+        <div class="input-group">
+          <label>Uživatelské jméno</label>
+          <input id="regUsername" />
+        </div>
+        <div class="input-group">
+          <label>E-mail</label>
+          <input id="regEmail" type="email" />
+        </div>
+        <div class="input-group">
+          <label>Heslo</label>
+          <input id="regPassword" type="password" />
+        </div>
+        <button class="btn btn-primary" onclick="registerUser()">Registrovat se</button>
+        <p class="small muted">Registrace čeká na schválení administrátorem.</p>
+      </div>
+    </section>
+
+    <section id="screen-login" class="hidden auth-wrap">
+      <div class="card">
+        <h2 class="section-title">Přihlášení</h2>
+        <div class="input-group">
+          <label>E-mail nebo uživatelské jméno</label>
+          <input id="loginIdentity" />
+        </div>
+        <div class="input-group">
+          <label>Heslo</label>
+          <input id="loginPassword" type="password" />
+        </div>
+        <div class="row">
+          <button class="btn btn-primary" onclick="loginUser()">Přihlásit se</button>
+          <button class="btn btn-secondary" onclick="showScreen('reset')">Zapomenuté heslo</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-reset" class="hidden auth-wrap">
+      <div class="card">
+        <h2 class="section-title">Obnovení hesla</h2>
+        <div class="input-group">
+          <label>E-mail nebo uživatelské jméno</label>
+          <input id="resetIdentity" />
+        </div>
+        <div class="input-group">
+          <label>Nové heslo</label>
+          <input id="resetPassword" type="password" />
+        </div>
+        <button class="btn btn-primary" onclick="resetPassword()">Změnit heslo</button>
+      </div>
+    </section>
+
+    <section id="screen-user" class="hidden">
+      <div class="dashboard-grid">
+        <aside class="card sidebar">
+          <div class="section-title" style="font-size:20px">Uživatelský panel</div>
+          <div class="menu">
+            <button id="userMenuDashboard" class="active" onclick="showUserTab('dashboard')">Dashboard</button>
+            <button id="userMenuResults" onclick="showUserTab('results')">Výsledky</button>
+            <button onclick="logout()">Odhlásit se</button>
+          </div>
+        </aside>
+        <div>
+          <div id="userTabDashboard" class="card"></div>
+          <div id="userTabResults" class="card hidden"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-test" class="hidden">
+      <div class="card">
+        <div class="question-header">
+          <div>
+            <div class="badge" id="testCategoryBadge"></div>
+            <h2 id="testQuestionTitle" class="section-title" style="margin-top:10px"></h2>
+            <div class="small muted" id="testQuestionMeta"></div>
+          </div>
+          <div style="text-align:right">
+            <div class="small muted">Zbývající čas</div>
+            <div class="timer" id="timer">45:00</div>
+          </div>
+        </div>
+        <div class="progressbar"><div id="progressFill"></div></div>
+        <img id="questionImage" class="image-preview hidden" alt="Obrázek k otázce" />
+        <div id="questionText"></div>
+        <div id="questionOptions" class="options"></div>
+        <div id="questionFeedback" class="feedback"></div>
+        <div class="question-nav">
+          <button class="btn btn-secondary" onclick="prevQuestion()">Předchozí</button>
+          <div class="row">
+            <button class="btn btn-secondary" onclick="saveProgress()">Uložit průběh</button>
+            <button class="btn btn-primary" onclick="nextQuestion()">Další</button>
+            <button class="btn btn-success" onclick="finishTest()">Odevzdat test</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-admin" class="hidden">
+      <div class="dashboard-grid">
+        <aside class="card sidebar">
+          <div class="section-title" style="font-size:20px">Administrace</div>
+          <div class="menu">
+            <button id="adminMenuOverview" class="active" onclick="showAdminTab('overview')">Přehled</button>
+            <button id="adminMenuRegistrations" onclick="showAdminTab('registrations')">Registrace</button>
+            <button id="adminMenuUsers" onclick="showAdminTab('users')">Uživatelé</button>
+            <button id="adminMenuCreateUser" onclick="showAdminTab('createUser')">Vytvořit účet</button>
+            <button id="adminMenuQuestions" onclick="showAdminTab('questions')">Otázky</button>
+            <button id="adminMenuResults" onclick="showAdminTab('results')">Výsledky</button>
+            <button onclick="logout()">Odhlásit se</button>
+          </div>
+        </aside>
+        <div>
+          <div id="adminTabOverview" class="card"></div>
+          <div id="adminTabRegistrations" class="card hidden"></div>
+          <div id="adminTabUsers" class="card hidden"></div>
+          <div id="adminTabCreateUser" class="card hidden"></div>
+          <div id="adminTabQuestions" class="card hidden"></div>
+          <div id="adminTabResults" class="card hidden"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'pcr_testy_app_v1';
+    const PASS_SCORE = 36;
+    const TEST_TOTAL_POINTS = 50;
+    const TEST_TOTAL_QUESTIONS = 30;
+    const TEST_DURATION_SECONDS = 45 * 60;
+
+    const seedQuestions = [
+      { id: 'psy-1', category: 'Psychologické a logické testy', type: 'single', question: 'Doplňte řadu: 3, 6, 12, 24, 48, ...', options: ['60','96','72'], correctAnswers: ['96'], explanation: 'Každé číslo je dvojnásobkem předchozího (48 × 2 = 96).', points: 2 },
+      { id: 'psy-2', category: 'Psychologické a logické testy', type: 'single', question: 'Všechny kovy vedou proud. Měď je kov. Co z toho vyplývá?', options: ['Měď vede proud.','Vše, co vede proud, je měď.','Některé kovy nevedou proud.'], correctAnswers: ['Měď vede proud.'], explanation: 'Jde o klasický sylogismus.', points: 2 },
+      { id: 'psy-3', category: 'Psychologické a logické testy', type: 'single', question: 'Které slovo nepatří do řady: Rozvážný, Opatrný, Zbrklý, Obezřetný?', options: ['Opatrný','Zbrklý','Obezřetný'], correctAnswers: ['Zbrklý'], explanation: 'Ostatní slova jsou synonyma pro opatrnost, zbrklý je opak.', points: 1 },
+      { id: 'psy-4', category: 'Psychologické a logické testy', type: 'single', question: 'Letadlo uletí 800 km za 2 hodiny. Kolik uletí za 30 minut?', options: ['100 km','200 km','400 km'], correctAnswers: ['200 km'], explanation: 'Rychlost je 400 km/h, za 30 minut tedy 200 km.', points: 2 },
+      { id: 'psy-5', category: 'Psychologické a logické testy', type: 'single', question: 'Doplňte: Ruka je k rukavici jako noha k...', options: ['Kalhotám','Botě','Chůzi'], correctAnswers: ['Botě'], explanation: 'Analogie část – ochranný prvek.', points: 1 },
+      { id: 'psy-6', category: 'Psychologické a logické testy', type: 'single', question: 'Pokud je „STŮL“ kódován jako „TUVM“, jak bude kódován „PES“?', options: ['QFT','OFR','QER'], correctAnswers: ['QFT'], explanation: 'Každé písmeno je nahrazeno následujícím v abecedě.', points: 3 },
+      { id: 'psy-7', category: 'Psychologické a logické testy', type: 'single', question: 'Máte 3 krabice. V jedné jsou jen jablka, v druhé jen hrušky, ve třetí obojí. Všechny štítky jsou špatně. Kolik ovoce musíte vytáhnout, abyste věděli, co kde je?', options: ['1 kus','2 kusy','3 kusy'], correctAnswers: ['1 kus'], explanation: 'Stačí jeden kus z krabice označené jako směs.', points: 4 },
+      { id: 'psy-8', category: 'Psychologické a logické testy', type: 'single', question: 'Pokud pět koček chytí pět myší za pět minut, za jak dlouho chytí jedna kočka jednu myš?', options: ['1 minutu','5 minut','25 minut'], correctAnswers: ['5 minut'], explanation: 'Každé kočce trvá chytit jednu myš 5 minut.', points: 2 },
+      { id: 'psy-9', category: 'Psychologické a logické testy', type: 'single', question: 'V řadě stojí 7 lidí. Petr je uprostřed. Kolikátý je zprava?', options: ['Třetí','Čtvrtý','Pátý'], correctAnswers: ['Čtvrtý'], explanation: 'Je uprostřed, tedy čtvrtý z obou stran.', points: 1 },
+      { id: 'psy-10', category: 'Psychologické a logické testy', type: 'single', question: 'Najděte chybu: 2, 4, 8, 14, 32.', options: ['4','8','14'], correctAnswers: ['14'], explanation: 'Správně má být 16.', points: 2 },
+      { id: 'psy-11', category: 'Psychologické a logické testy', type: 'single', question: 'Slovo „AUTORITA“ obsahuje kolik samohlásek?', options: ['3','4','5'], correctAnswers: ['5'], explanation: 'A, U, O, I, A = celkem 5 samohlásek.', points: 1 },
+      { id: 'psy-12', category: 'Psychologické a logické testy', type: 'single', question: 'Petrův otec má 5 synů: Deset, Dvacet, Třicet, Čtyřicet. Jak se jmenuje pátý?', options: ['Padesát','Petr','Jan'], correctAnswers: ['Petr'], explanation: 'Jméno je uvedeno v zadání.', points: 1 },
+      { id: 'psy-13', category: 'Psychologické a logické testy', type: 'single', question: 'Vypočítejte: 10 - 2 × (3 + 1)', options: ['2','32','6'], correctAnswers: ['2'], explanation: 'Nejprve závorka, pak násobení a odčítání.', points: 1 },
+      { id: 'psy-14', category: 'Psychologické a logické testy', type: 'single', question: 'Které číslo nepatří mezi ostatní: 13, 17, 21, 19?', options: ['13','21','19'], correctAnswers: ['21'], explanation: '21 není prvočíslo.', points: 2 },
+      { id: 'psy-15', category: 'Psychologické a logické testy', type: 'single', question: 'Který směr je opačný k severovýchodu?', options: ['Severozápad','Jihozápad','Jihovýchod'], correctAnswers: ['Jihozápad'], explanation: 'Opak severovýchodu je jihozápad.', points: 1 },
+      { id: 'psy-16', category: 'Psychologické a logické testy', type: 'single', question: 'Máme dvě hodiny. Jedny se zpožďují o minutu za hodinu, druhé stojí. Které ukazují častěji správný čas?', options: ['Ty, co se zpožďují.','Ty, co stojí.','Oboje stejně.'], correctAnswers: ['Ty, co stojí.'], explanation: 'Stojící hodiny ukazují správný čas 2× denně.', points: 4 },
+      { id: 'psy-17', category: 'Psychologické a logické testy', type: 'single', question: 'Doplňte: Strom je k lesu jako voják k...', options: ['Pušce','Válce','Armádě'], correctAnswers: ['Armádě'], explanation: 'Vztah část k celku.', points: 1 },
+      { id: 'psy-18', category: 'Psychologické a logické testy', type: 'single', question: 'Lékař vám dá 3 tablety a řekne, abyste si vzali jednu každou půlhodinu. Za jak dlouho je doberete?', options: ['Za 1,5 hodiny','Za 1 hodinu','Za 45 minut'], correctAnswers: ['Za 1 hodinu'], explanation: 'První hned, druhou za 30 minut, třetí za 60 minut.', points: 3 },
+      { id: 'psy-19', category: 'Psychologické a logické testy', type: 'single', question: 'V místnosti je 10 lidí. Každý si potřese rukou s každým. Kolik bude potřesení?', options: ['100','90','45'], correctAnswers: ['45'], explanation: 'Použije se vzorec n × (n - 1) / 2.', points: 4 },
+      { id: 'psy-20', category: 'Psychologické a logické testy', type: 'single', question: 'Včera bylo po sobotě. Jaký den bude pozítří?', options: ['Úterý','Středa','Čtvrtek'], correctAnswers: ['Středa'], explanation: 'Včera byla neděle, dnes pondělí, zítra úterý, pozítří středa.', points: 2 },
+      { id: 'psy-21', category: 'Psychologické a logické testy', type: 'single', question: 'Které číslo je nejmenší?', options: ['0,5','1/4','0,2'], correctAnswers: ['0,2'], explanation: '0,2 je menší než 0,25 i 0,5.', points: 1 },
+      { id: 'psy-22', category: 'Psychologické a logické testy', type: 'single', question: 'Pokud se kůň dívá na sever a otočí se o 180 stupňů, kam se dívá jeho ocas?', options: ['K zemi','Na sever','Na jih'], correctAnswers: ['K zemi'], explanation: 'Jde o chyták.', points: 1 },
+      { id: 'psy-23', category: 'Psychologické a logické testy', type: 'single', question: 'Kolega na hlídce hrubě uráží bezdomovce. Co uděláte?', options: ['Přidám se, aby věděl, že jsme tým.','Upozorním ho, že je to neprofesionální a má přestat.','Budu to ignorovat a nahlásím ho až na konci směny.'], correctAnswers: ['Upozorním ho, že je to neprofesionální a má přestat.'], explanation: 'Policista musí jednat eticky a okamžitě.', points: 5 },
+      { id: 'psy-24', category: 'Psychologické a logické testy', type: 'single', question: 'Zastavíte auto za přestupek a řidič vám nabízí peníze. Co uděláte?', options: ['Vezmu si je, pokud nikdo nekouká.','Důrazně odmítnu a poučím ho, že jde o trestný čin podplácení.','Peníze si vezmu a dám je na charitu.'], correctAnswers: ['Důrazně odmítnu a poučím ho, že jde o trestný čin podplácení.'], explanation: 'Nulová tolerance korupce.', points: 5 },
+      { id: 'psy-25', category: 'Psychologické a logické testy', type: 'single', question: 'Jak reagujete na kritiku své osoby?', options: ['Hned se začnu bránit nebo útočit.','Vyslechnu ji a zkusím se z ní poučit.','Kritiku ignoruji, nezajímá mě.'], correctAnswers: ['Vyslechnu ji a zkusím se z ní poučit.'], explanation: 'Sebereflexe je důležitá.', points: 4 },
+
+      { id: 'law-1', category: 'Zákony', type: 'single', question: 'Co přesně znamená „Presumpce neviny“?', options: ['Policie musí dokázat, že je člověk nevinný.','Na každého se hledí jako na nevinného, dokud pravomocný rozsudek soudu neprokáže vinu.','Obviněný musí policii dokázat, že trestný čin nespáchal.'], correctAnswers: ['Na každého se hledí jako na nevinného, dokud pravomocný rozsudek soudu neprokáže vinu.'], explanation: 'Břemeno důkazu leží na státu.', points: 4 },
+      { id: 'law-2', category: 'Zákony', type: 'single', question: 'Jaký je hlavní rozdíl mezi „Zadržením“ a „Zatčením“?', options: ['Žádný, jsou to synonyma.','Zadržet může policie, zatknout lze jen na základě příkazu soudce.','Zatýká jen zásahová jednotka, zadržuje běžná hlídka.'], correctAnswers: ['Zadržet může policie, zatknout lze jen na základě příkazu soudce.'], explanation: 'Zatčení vyžaduje zatykač.', points: 4 },
+      { id: 'law-3', category: 'Zákony', type: 'single', question: 'Kdo v České republice vydává příkaz k domovní prohlídce?', options: ['Policejní prezident.','Státní zástupce.','Soudce.'], correctAnswers: ['Soudce.'], explanation: 'Domovní svoboda je ústavně chráněná.', points: 3 },
+      { id: 'law-4', category: 'Zákony', type: 'single', question: 'Od jaké výše škody se v ČR obecně stává majetkový delikt trestným činem?', options: ['Od 5 000 Kč.','Od 10 000 Kč.','Od 20 000 Kč.'], correctAnswers: ['Od 10 000 Kč.'], explanation: 'Hranice škody nikoliv nepatrné je 10 000 Kč.', points: 2 },
+      { id: 'law-5', category: 'Zákony', type: 'single', question: 'Co je to „Nutná obrana“?', options: ['Odvracení přímo hrozícího nebo trvajícího útoku na zájem chráněný zákonem.','Pomsta útočníkovi poté, co utekl.','Zastřelení zloděje, který utíká ze zahrady s jablky.'], correctAnswers: ['Odvracení přímo hrozícího nebo trvajícího útoku na zájem chráněný zákonem.'], explanation: 'Obrana nesmí být zjevně nepřiměřená.', points: 4 },
+      { id: 'law-6', category: 'Zákony', type: 'single', question: 'Vysvětlete pojem „Krajní nouze“.', options: ['Stav, kdy policista nemá dostatek nábojů.','Odvracení nebezpečí, kdy způsobený následek nesmí být závažnější než ten, který hrozil.','Možnost porušit zákon, když spěchám na oběd.'], correctAnswers: ['Odvracení nebezpečí, kdy způsobený následek nesmí být závažnější než ten, který hrozil.'], explanation: 'Typicky záchrana života před větší škodou.', points: 4 },
+      { id: 'law-7', category: 'Zákony', type: 'single', question: 'Co znamená zkratka „OČTŘ“?', options: ['Oddělení čistoty trestního řízení.','Orgány činné v trestním řízení.','Obecná část trestního řádu.'], correctAnswers: ['Orgány činné v trestním řízení.'], explanation: 'Souhrnný název pro soud, státního zástupce a policejní orgán.', points: 2 },
+      { id: 'law-8', category: 'Zákony', type: 'single', question: 'Kdy musí policista poučit osobu o jejích právech?', options: ['Až při příchodu na služebnu.','Při každém omezení osobní svobody.','Pouze pokud o to osoba výslovně požádá.'], correctAnswers: ['Při každém omezení osobní svobody.'], explanation: 'Základní práva musí být sdělena ihned.', points: 3 },
+      { id: 'law-9', category: 'Zákony', type: 'single', question: 'Může občan provést zadržení jiné osoby?', options: ['Ne, to smí jen policie.','Ano, pokud byla osoba přistižena při trestném činu a musí ihned volat policii.','Ano, i při podezření na přestupek.'], correctAnswers: ['Ano, pokud byla osoba přistižena při trestném činu a musí ihned volat policii.'], explanation: 'Takzvané občanské zadržení.', points: 3 },
+      { id: 'law-10', category: 'Zákony', type: 'single', question: 'Jak dlouho může Policie ČR standardně zadržet podezřelou osobu, než ji musí propustit nebo předat soudu?', options: ['24 hodin.','48 hodin.','72 hodin.'], correctAnswers: ['48 hodin.'], explanation: 'Policie má 48 hodin pro další procesní krok.', points: 2 },
+      { id: 'law-11', category: 'Zákony', type: 'single', question: 'Jaký je rozdíl mezi „Krádeží“ a „Loupeží“?', options: ['Žádný.','Krádež je zmocnění se věci, loupež je za použití násilí nebo pohrůžky násilím.','Loupež je jen u bank.'], correctAnswers: ['Krádež je zmocnění se věci, loupež je za použití násilí nebo pohrůžky násilím.'], explanation: 'Loupež je závažnější trestný čin.', points: 4 },
+      { id: 'law-12', category: 'Zákony', type: 'single', question: 'Kdo stojí v čele Policie České republiky?', options: ['Ministr vnitra.','Policejní prezident.','Předseda vlády.'], correctAnswers: ['Policejní prezident.'], explanation: 'Přímým nadřízeným sboru je policejní prezident.', points: 1 },
+      { id: 'law-13', category: 'Zákony', type: 'single', question: 'Smí policista při výkonu služby požívat alkohol?', options: ['Ano, při oslavě narozenin kolegy.','Ne, nesmí ho požívat před službou ani během ní.','Ano, pokud to nenaruší jeho schopnosti.'], correctAnswers: ['Ne, nesmí ho požívat před službou ani během ní.'], explanation: 'Jde o přísný zákaz.', points: 2 },
+      { id: 'law-14', category: 'Zákony', type: 'single', question: 'V kolik hodin začíná v ČR noční klid?', options: ['Ve 20:00.','Ve 22:00.','O půlnoci.'], correctAnswers: ['Ve 22:00.'], explanation: 'Jde o zákonnou hranici veřejného pořádku.', points: 1 },
+      { id: 'law-15', category: 'Zákony', type: 'single', question: 'Může být policista členem politické strany?', options: ['Ano, může.','Ne, zákon to zakazuje kvůli apolitičnosti sboru.','Ano, ale nesmí nosit stranický odznak.'], correctAnswers: ['Ne, zákon to zakazuje kvůli apolitičnosti sboru.'], explanation: 'Policie musí být nezávislá.', points: 3 },
+      { id: 'law-16', category: 'Zákony', type: 'single', question: 'Co je to „Listina základních práv a svobod“?', options: ['Součást ústavního pořádku ČR, která garantuje práva všem lidem.','Seznam jmen policistů.','Zákoník práce pro policii.'], correctAnswers: ['Součást ústavního pořádku ČR, která garantuje práva všem lidem.'], explanation: 'Jde o klíčový ústavní dokument.', points: 2 },
+      { id: 'law-17', category: 'Zákony', type: 'single', question: 'Kdo dohlíží na zákonnost postupu policie v trestním řízení?', options: ['Soudce.','Státní zástupce.','Ministr spravedlnosti.'], correctAnswers: ['Státní zástupce.'], explanation: 'Státní zástupce je pánem přípravného řízení.', points: 3 },
+      { id: 'law-18', category: 'Zákony', type: 'single', question: 'Co je to „Zákon o Policii ČR“ (č. 273/2008 Sb.)?', options: ['Hlavní zákon, který definuje pravomoci, povinnosti a úkoly policie.','Knížka s návodem, jak zatýkat.','Soubor pravidel silničního provozu.'], correctAnswers: ['Hlavní zákon, který definuje pravomoci, povinnosti a úkoly policie.'], explanation: 'Základní norma pro výkon služby.', points: 2 },
+      { id: 'law-19', category: 'Zákony', type: 'single', question: 'Co je to „Recidiva“?', options: ['Druh nakažlivé nemoci.','Opakované páchání trestné činnosti osobou, která již byla dříve odsouzena.','Omluvení trestu za dobrou práci.'], correctAnswers: ['Opakované páchání trestné činnosti osobou, která již byla dříve odsouzena.'], explanation: 'Recidivista se nepoučil z předchozího trestu.', points: 2 },
+      { id: 'law-20', category: 'Zákony', type: 'single', question: 'Co je to „GIBS“?', options: ['Generální inspekce bezpečnostních sborů – vyšetřuje trestné činy policistů.','Globální informační bezpečnostní systém.','Policejní odbory.'], correctAnswers: ['Generální inspekce bezpečnostních sborů – vyšetřuje trestné činy policistů.'], explanation: 'Jde o kontrolní orgán.', points: 2 },
+      { id: 'law-21', category: 'Zákony', type: 'single', question: 'Může policista legitimovat osobu bez důvodu?', options: ['Ano, kdykoliv se mu zachce.','Ne, musí mít zákonný důvod.','Ne, pouze se souhlasem starosty.'], correctAnswers: ['Ne, musí mít zákonný důvod.'], explanation: 'Postup musí být odůvodněn zákonem.', points: 3 },
+      { id: 'law-22', category: 'Zákony', type: 'single', question: 'Co je to „Trestní rejstřík“?', options: ['Evidence osob pravomocně odsouzených za trestné činy.','Seznam všech lidí v ČR.','Archiv policejních fotografií.'], correctAnswers: ['Evidence osob pravomocně odsouzených za trestné činy.'], explanation: 'Čistý rejstřík je podmínkou pro přijetí k policii.', points: 2 },
+      { id: 'law-23', category: 'Zákony', type: 'single', question: 'Co znamená, že je trestný čin „Promlčen“?', options: ['Že pachatel zemřel.','Že uplynula zákonná doba, po které už nelze uložit trest.','Že se ztratily důkazy.'], correctAnswers: ['Že uplynula zákonná doba, po které už nelze uložit trest.'], explanation: 'Promlčení závisí na závažnosti činu.', points: 3 },
+
+      { id: 'hea-1', category: 'Zdravověda', type: 'single', question: 'Co je to řetězec přežití?', options: ['Postup při zatýkání.','Posloupnost: včasné volání, KPR, defibrilace, rozšířená resuscitace.','Seznam vybavení policejního auta.'], correctAnswers: ['Posloupnost: včasné volání, KPR, defibrilace, rozšířená resuscitace.'], explanation: 'Každý článek zvyšuje šanci na přežití.', points: 4 },
+      { id: 'hea-2', category: 'Zdravověda', type: 'single', question: 'Jak zjistíte, zda člověk dýchá?', options: ['Přiložím zrcátko k ústům.','Metodou vidím, slyším, cítím.','Zeptám se ho.'], correctAnswers: ['Metodou vidím, slyším, cítím.'], explanation: 'Kontrola dýchání má trvat do 10 sekund.', points: 2 },
+      { id: 'hea-3', category: 'Zdravověda', type: 'single', question: 'Co je to KPR?', options: ['Kardiopulmonální resuscitace.','Kontrola prvků rozvoje.','Krizová pomoc raněným.'], correctAnswers: ['Kardiopulmonální resuscitace.'], explanation: 'Základní technika pro záchranu života.', points: 1 },
+      { id: 'hea-4', category: 'Zdravověda', type: 'single', question: 'Kde správně stlačovat hrudník při resuscitaci?', options: ['Na levé straně hrudníku.','Uprostřed hrudní kosti.','V oblasti žaludku.'], correctAnswers: ['Uprostřed hrudní kosti.'], explanation: 'Stlačuje se spodní polovina hrudní kosti.', points: 2 },
+      { id: 'hea-5', category: 'Zdravověda', type: 'single', question: 'Jaká je frekvence stlačování hrudníku při KPR dospělého?', options: ['60 za minutu.','100–120 za minutu.','150 za minutu.'], correctAnswers: ['100–120 za minutu.'], explanation: 'Doporučené tempo pro účinnou KPR.', points: 2 },
+      { id: 'hea-6', category: 'Zdravověda', type: 'single', question: 'Co je to AED?', options: ['Auto s lékařem.','Automatizovaný externí defibrilátor.','Analýza EKG dat.'], correctAnswers: ['Automatizovaný externí defibrilátor.'], explanation: 'Přístroj může obnovit srdeční rytmus výbojem.', points: 2 },
+      { id: 'hea-7', category: 'Zdravověda', type: 'single', question: 'Kdy se zahajuje resuscitace?', options: ['Pokud osoba nereaguje a nedýchá normálně.','Pokud je osoba v bezvědomí, ale dýchá.','Pokud si osoba stěžuje na bolest na hrudi.'], correctAnswers: ['Pokud osoba nereaguje a nedýchá normálně.'], explanation: 'Normální dýchání je klíčové kritérium.', points: 3 },
+      { id: 'hea-8', category: 'Zdravověda', type: 'single', question: 'Co je to stabilizovaná poloha?', options: ['Poloha na zádech s podloženýma nohama.','Poloha na boku, zajišťující průchodnost dýchacích cest.','Sed v autě.'], correctAnswers: ['Poloha na boku, zajišťující průchodnost dýchacích cest.'], explanation: 'Používá se u bezvědomého, který dýchá.', points: 2 },
+      { id: 'hea-9', category: 'Zdravověda', type: 'single', question: 'Kdy nesmíte použít stabilizovanou polohu?', options: ['Při podezření na poranění páteře.','U opilého člověka.','U těhotné ženy.'], correctAnswers: ['Při podezření na poranění páteře.'], explanation: 'Manipulace může zhoršit poranění páteře.', points: 3 },
+      { id: 'hea-10', category: 'Zdravověda', type: 'single', question: 'Jaký je nejlepší způsob zastavení masivního tepenného krvácení?', options: ['Přiložení studeného obkladu.','Vyčištění rány dezinfekcí.','Přímý tlak v ráně nebo tlakový obvaz.'], correctAnswers: ['Přímý tlak v ráně nebo tlakový obvaz.'], explanation: 'Mechanické zastavení krvácení je priorita.', points: 4 },
+      { id: 'hea-11', category: 'Zdravověda', type: 'single', question: 'Co je to turniket?', options: ['Obvaz na fixaci zlomeniny.','Páska k zaškrcení končetiny při masivním krvácení.','Nástroj na vyprošťování z auta.'], correctAnswers: ['Páska k zaškrcení končetiny při masivním krvácení.'], explanation: 'Používá se při život ohrožujícím krvácení.', points: 3 },
+      { id: 'hea-12', category: 'Zdravověda', type: 'single', question: 'Jak ošetříte cizí těleso v ráně, například nůž?', options: ['Ihned ho vyndám.','Nechám ho na místě a pouze zafixuji.','Vyndám a ránu vypláchnu.'], correctAnswers: ['Nechám ho na místě a pouze zafixuji.'], explanation: 'Těleso může fungovat jako špunt.', points: 4 },
+      { id: 'hea-13', category: 'Zdravověda', type: 'single', question: 'Jak ošetřit popáleninu bez puchýřů?', options: ['Chladit studenou tekoucí vodou.','Namazat máslem nebo olejem.','Přelepit náplastí.'], correctAnswers: ['Chladit studenou tekoucí vodou.'], explanation: 'Oleje a masti nejsou vhodné.', points: 2 },
+      { id: 'hea-14', category: 'Zdravověda', type: 'single', question: 'Jak poznáte šokový stav?', options: ['Člověk je agresivní a křičí.','Bledost, studený pot, zrychlený tep, zmatenost.','Člověk má vysokou teplotu.'], correctAnswers: ['Bledost, studený pot, zrychlený tep, zmatenost.'], explanation: 'Typické známky šoku.', points: 3 },
+      { id: 'hea-15', category: 'Zdravověda', type: 'single', question: 'Jak poznat mrtvici FAST testem?', options: ['Člověk nemůže chodit.','Ovislý koutek, neschopnost zvednout obě paže, porucha řeči.','Člověk má vyrážku.'], correctAnswers: ['Ovislý koutek, neschopnost zvednout obě paže, porucha řeči.'], explanation: 'Při FAST testu je nutné volat 155.', points: 4 },
+      { id: 'hea-16', category: 'Zdravověda', type: 'single', question: 'Co dělat u epileptického záchvatu?', options: ['Chránit hlavu před úrazem, nebránit pohybům, po záchvatu zajistit dýchání.','Strčit mu prsty do úst.','Připoutat ho k lavičce.'], correctAnswers: ['Chránit hlavu před úrazem, nebránit pohybům, po záchvatu zajistit dýchání.'], explanation: 'Do úst se nic nestrká.', points: 4 },
+      { id: 'hea-17', category: 'Zdravověda', type: 'single', question: 'Jak postupovat u otravy léky?', options: ['Vyvolat zvracení.','Zjistit co, kolik a kdy užil, volat 155 nebo toxikologickou linku.','Podat mléko.'], correctAnswers: ['Zjistit co, kolik a kdy užil, volat 155 nebo toxikologickou linku.'], explanation: 'Vyvolání zvracení může být nebezpečné.', points: 3 },
+      { id: 'hea-18', category: 'Zdravověda', type: 'single', question: 'K čemu slouží izotermická fólie?', options: ['K balení svačiny.','K tepelné izolaci zraněného.','K označení místa nehody.'], correctAnswers: ['K tepelné izolaci zraněného.'], explanation: 'Brání podchlazení.', points: 1 },
+      { id: 'hea-19', category: 'Zdravověda', type: 'single', question: 'Které je jednotné tísňové číslo v EU?', options: ['111','112','911'], correctAnswers: ['112'], explanation: 'Platí v celé EU.', points: 1 },
+      { id: 'hea-20', category: 'Zdravověda', type: 'single', question: 'Co je to pánevní pás?', options: ['Doplněk uniformy.','Pomůcka k fixaci zlomeniny pánve při nehodách.','Pás pro bojová umění.'], correctAnswers: ['Pomůcka k fixaci zlomeniny pánve při nehodách.'], explanation: 'Snižuje riziko vykrvácení do pánve.', points: 3 },
+
+      { id: 'traf-1', category: 'Dopravní problematika', type: 'single', question: 'Kdo je účastníkem provozu na pozemních komunikacích?', options: ['Pouze řidič motorového vozidla.','Každý, kdo se přímým způsobem účastní provozu.','Pouze osoba starší 18 let.'], correctAnswers: ['Každý, kdo se přímým způsobem účastní provozu.'], explanation: 'Patří sem i chodec nebo cyklista.', points: 2 },
+      { id: 'traf-2', category: 'Dopravní problematika', type: 'single', question: 'Jaká je nejvyšší povolená rychlost v obci?', options: ['40 km/h','50 km/h','60 km/h'], correctAnswers: ['50 km/h'], explanation: 'Základní limit v obci je 50 km/h.', points: 1 },
+      { id: 'traf-3', category: 'Dopravní problematika', type: 'single', question: 'Kdy má řidič povinnost dát přednost v jízdě?', options: ['Vždy na křižovatce.','Pokud by řidič s předností musel náhle změnit směr nebo rychlost.','Jen u vozidel s modrým majákem.'], correctAnswers: ['Pokud by řidič s předností musel náhle změnit směr nebo rychlost.'], explanation: 'Jde o praktickou definici přednosti.', points: 3 },
+      { id: 'traf-4', category: 'Dopravní problematika', type: 'single', question: 'Co znamená dopravní značka P 4 – Dej přednost v jízdě?', options: ['Povinnost zastavit vozidlo.','Povinnost dát přednost v jízdě na hlavní silnici.','Zákaz vjezdu.'], correctAnswers: ['Povinnost dát přednost v jízdě na hlavní silnici.'], explanation: 'Nejde o absolutní povinnost zastavit.', points: 2 },
+      { id: 'traf-5', category: 'Dopravní problematika', type: 'single', question: 'Kdo má přednost na křižovatce bez značek?', options: ['Vozidlo jedoucí rychleji.','Vozidlo přijíždějící zprava.','Vozidlo odbočující vpravo.'], correctAnswers: ['Vozidlo přijíždějící zprava.'], explanation: 'Platí pravidlo pravé ruky.', points: 1 },
+      { id: 'traf-6', category: 'Dopravní problematika', type: 'single', question: 'Jaký je limit pro alkohol v krvi řidiče v ČR?', options: ['0,2 promile','0,5 promile','0,0 promile'], correctAnswers: ['0,0 promile'], explanation: 'V ČR platí nulová tolerance.', points: 2 },
+      { id: 'traf-7', category: 'Dopravní problematika', type: 'single', question: 'Kdy smíte předjíždět zprava?', options: ['Vždy, když je vlevo volno.','Pokud vozidlo vlevo odbočuje vlevo.','Předjíždění zprava je vždy zakázáno.'], correctAnswers: ['Pokud vozidlo vlevo odbočuje vlevo.'], explanation: 'Jde o zákonnou výjimku.', points: 3 },
+      { id: 'traf-8', category: 'Dopravní problematika', type: 'single', question: 'Jak se chovat u tramvaje, která zastavila v zastávce?', options: ['Musím vždy zastavit.','Musím zastavit, pokud cestující nastupují nebo vystupují do vozovky.','Můžu projet bez ohledu na cestující.'], correctAnswers: ['Musím zastavit, pokud cestující nastupují nebo vystupují do vozovky.'], explanation: 'Ochrana cestujících je prioritní.', points: 3 },
+      { id: 'traf-9', category: 'Dopravní problematika', type: 'single', question: 'Může řidič v obci předjíždět na přechodu pro chodce?', options: ['Ano, pokud je tam více pruhů.','Ne, je to zakázáno.','Ano, pokud nikdo nejde.'], correctAnswers: ['Ne, je to zakázáno.'], explanation: 'Předjíždění na přechodu je zakázané.', points: 2 },
+      { id: 'traf-10', category: 'Dopravní problematika', type: 'single', question: 'Co dělat jako první při dopravní nehodě?', options: ['Zabezpečit místo nehody.','Volat pojišťovnu.','Změřit brzdnou dráhu.'], correctAnswers: ['Zabezpečit místo nehody.'], explanation: 'Bezpečnost místa je první.', points: 3 },
+      { id: 'traf-11', category: 'Dopravní problematika', type: 'single', question: 'Jaká je hranice škody pro povinné hlášení nehody policii bez zranění?', options: ['50 000 Kč','100 000 Kč','500 000 Kč'], correctAnswers: ['100 000 Kč'], explanation: 'Nad tuto hranici je nutné volat policii.', points: 2 },
+      { id: 'traf-12', category: 'Dopravní problematika', type: 'single', question: 'Co je povinnou výbavou auta v ČR?', options: ['Reflexní vesta, trojúhelník, autolékárnička.','Náhradní motor.','GPS navigace.'], correctAnswers: ['Reflexní vesta, trojúhelník, autolékárnička.'], explanation: 'Jde o základní povinnou výbavu.', points: 1 },
+      { id: 'traf-13', category: 'Dopravní problematika', type: 'single', question: 'Jaký je minimální vzorek u letních pneumatik?', options: ['1,6 mm','2,5 mm','4 mm'], correctAnswers: ['1,6 mm'], explanation: 'Zákonné minimum pro letní pneu.', points: 1 },
+      { id: 'traf-14', category: 'Dopravní problematika', type: 'single', question: 'Jaký je minimální vzorek u zimních pneumatik?', options: ['1,6 mm','4 mm','3 mm'], correctAnswers: ['4 mm'], explanation: 'V zimním období musí být minimálně 4 mm.', points: 1 },
+      { id: 'traf-15', category: 'Dopravní problematika', type: 'single', question: 'Co je to akvaplaning?', options: ['Jízda po vodě.','Ztráta kontaktu pneumatiky s vozovkou kvůli vodnímu filmu.','Závada na motoru.'], correctAnswers: ['Ztráta kontaktu pneumatiky s vozovkou kvůli vodnímu filmu.'], explanation: 'Pneumatika přestane přenášet síly.', points: 3 },
+      { id: 'traf-16', category: 'Dopravní problematika', type: 'single', question: 'Jak ověřit technickou způsobilost vozidla?', options: ['Pohledem na karoserii.','Kontrolou technického průkazu a platné STK.','Podle barvy auta.'], correctAnswers: ['Kontrolou technického průkazu a platné STK.'], explanation: 'Doklady a STK jsou rozhodující.', points: 2 },
+      { id: 'traf-17', category: 'Dopravní problematika', type: 'single', question: 'Co dělat při požáru vozidla?', options: ['Otevřít kapotu dokořán.','Použít hasicí přístroj z bezpečné vzdálenosti.','Utéct a nechat ho shořet.'], correctAnswers: ['Použít hasicí přístroj z bezpečné vzdálenosti.'], explanation: 'Bezpečnost zasahujícího je klíčová.', points: 3 },
+      { id: 'traf-18', category: 'Dopravní problematika', type: 'single', question: 'Co je bodový systém?', options: ['Hra pro řidiče.','Evidence přestupků, kde za každý je přidělen určitý počet bodů.','Bonus za jízdu bez nehod.'], correctAnswers: ['Evidence přestupků, kde za každý je přidělen určitý počet bodů.'], explanation: 'Sleduje opakované porušování pravidel.', points: 2 },
+      { id: 'traf-19', category: 'Dopravní problematika', type: 'single', question: 'Co se děje při dosažení 12 bodů v registru?', options: ['Dostanete odměnu.','Řidič pozbývá řidičské oprávnění.','Zvýší se pojistka.'], correctAnswers: ['Řidič pozbývá řidičské oprávnění.'], explanation: 'Řidič přijde o řidičský průkaz.', points: 2 },
+      { id: 'traf-20', category: 'Dopravní problematika', type: 'single', question: 'Jak zastavit vozidlo za jízdy?', options: ['Zvláštním výstražným světlem a pokynem STOP.','Střílením na pneumatiky.','Zablokováním cesty v každé situaci.'], correctAnswers: ['Zvláštním výstražným světlem a pokynem STOP.'], explanation: 'Standardní služební zastavení vozidla.', points: 3 },
+      { id: 'traf-21', category: 'Dopravní problematika', type: 'single', question: 'Co znamená pokyn policisty „rozpažené ruce“?', options: ['Jeďte dál.','Stop pro vozidla přijíždějící směrem k policistovi zepředu a zezadu.','Zatáčka vlevo.'], correctAnswers: ['Stop pro vozidla přijíždějící směrem k policistovi zepředu a zezadu.'], explanation: 'Základní pokyn při řízení provozu.', points: 3 },
+      { id: 'traf-22', category: 'Dopravní problematika', type: 'single', question: 'Co je blokové řízení?', options: ['Způsob vyřízení přestupku na místě.','Stavební řízení.','Parkování v blocích.'], correctAnswers: ['Způsob vyřízení přestupku na místě.'], explanation: 'Jedná se o pokutu na místě.', points: 2 },
+      { id: 'traf-23', category: 'Dopravní problematika', type: 'single', question: 'Jaký je hlavní cíl policie v dopravě?', options: ['Vybrat co nejvíce peněz na pokutách.','Zajištění bezpečnosti a plynulosti provozu.','Změřit co nejvíce lidí.'], correctAnswers: ['Zajištění bezpečnosti a plynulosti provozu.'], explanation: 'To je hlavní účel dopravní služby.', points: 2 },
+
+      { id: 'open-1', category: 'Zákony', type: 'open', question: 'Napište, co znamená presumpce neviny.', correctAnswers: ['Na každého se hledí jako na nevinného, dokud pravomocný rozsudek soudu neprokáže vinu.'], explanation: 'U otevřené otázky se vyžaduje přesná shoda.', points: 4 },
+      { id: 'open-2', category: 'Zdravověda', type: 'open', question: 'Napište jednotné tísňové číslo v EU.', correctAnswers: ['112'], explanation: 'Správná odpověď je 112.', points: 1 },
+      { id: 'multi-1', category: 'Zdravověda', type: 'multiple', question: 'Vyberte správné příznaky šokového stavu.', options: ['Bledost','Studený pot','Zrychlený tep','Radost a smích'], correctAnswers: ['Bledost','Studený pot','Zrychlený tep'], explanation: 'Šok se projevuje bledostí, studeným potem a zrychleným tepem.', points: 4 }
+    ];
+
+    let state = loadState();
+    let activeTestTimer = null;
+
+    function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+      const initial = {
+        users: [
+          { id: uid(), username: 'admin', email: 'admin@pcr.local', password: 'admin123', role: 'admin', approved: true, active: true, attemptsAllowed: 99, createdByAdmin: true },
+          { id: uid(), username: 'uchazec', email: 'uchazec@demo.cz', password: 'demo123', role: 'user', approved: true, active: true, attemptsAllowed: 1, createdByAdmin: true }
+        ],
+        currentUserId: null,
+        questions: seedQuestions,
+        tests: [],
+        answerRequests: []
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(initial));
+      return initial;
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function uid() {
+      return Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+
+    function getCurrentUser() {
+      return state.users.find(u => u.id === state.currentUserId) || null;
+    }
+
+    function showScreen(name) {
+      ['home','register','login','reset','user','test','admin'].forEach(id => {
+        document.getElementById('screen-' + id).classList.add('hidden');
+      });
+      document.getElementById('screen-' + name).classList.remove('hidden');
+      renderTopActions();
+      if (name === 'user') renderUser();
+      if (name === 'admin') renderAdmin();
+      if (name === 'test') renderTest();
+    }
+
+    function renderTopActions() {
+      const top = document.getElementById('topActions');
+      const user = getCurrentUser();
+      if (!user) {
+        top.innerHTML = `
+          <button class="btn btn-secondary" onclick="showScreen('home')">Domů</button>
+          <button class="btn btn-secondary" onclick="showScreen('login')">Přihlášení</button>
+          <button class="btn btn-primary" onclick="showScreen('register')">Registrace</button>`;
+        return;
+      }
+      top.innerHTML = `
+        <span class="badge">Přihlášen: ${escapeHtml(user.username)}</span>
+        <button class="btn btn-secondary" onclick="showScreen('${user.role === 'admin' ? 'admin' : 'user'}')">Panel</button>
+        <button class="btn btn-danger" onclick="logout()">Odhlásit se</button>`;
+    }
+
+    function escapeHtml(str='') {
+      return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
+    }
+
+    function registerUser() {
+      const username = document.getElementById('regUsername').value.trim();
+      const email = document.getElementById('regEmail').value.trim().toLowerCase();
+      const password = document.getElementById('regPassword').value;
+      if (!username || !email || !password) return alert('Vyplňte všechna pole.');
+      if (state.users.some(u => u.username === username || u.email === email)) return alert('Uživatel nebo e-mail už existuje.');
+      state.users.push({ id: uid(), username, email, password, role: 'user', approved: false, active: false, attemptsAllowed: 1, createdByAdmin: false });
+      saveState();
+      alert('Registrace byla odeslána. Počkejte na schválení administrátorem.');
+      showScreen('login');
+    }
+
+    function loginUser() {
+      const identity = document.getElementById('loginIdentity').value.trim().toLowerCase();
+      const password = document.getElementById('loginPassword').value;
+      const user = state.users.find(u => (u.email.toLowerCase() === identity || u.username.toLowerCase() === identity) && u.password === password);
+      if (!user) return alert('Neplatné přihlašovací údaje.');
+      if (!user.approved || !user.active) return alert('Účet ještě není aktivní nebo nebyl schválen administrátorem.');
+      state.currentUserId = user.id;
+      saveState();
+      showScreen(user.role === 'admin' ? 'admin' : 'user');
+    }
+
+    function logout() {
+      if (activeTestTimer) clearInterval(activeTestTimer);
+      activeTestTimer = null;
+      state.currentUserId = null;
+      saveState();
+      showScreen('home');
+    }
+
+    function resetPassword() {
+      const identity = document.getElementById('resetIdentity').value.trim().toLowerCase();
+      const newPassword = document.getElementById('resetPassword').value;
+      const user = state.users.find(u => u.email.toLowerCase() === identity || u.username.toLowerCase() === identity);
+      if (!user) return alert('Uživatel nebyl nalezen.');
+      if (!newPassword) return alert('Zadejte nové heslo.');
+      user.password = newPassword;
+      saveState();
+      alert('Heslo bylo změněno.');
+      showScreen('login');
+    }
+
+    function showUserTab(tab) {
+      document.getElementById('userTabDashboard').classList.toggle('hidden', tab !== 'dashboard');
+      document.getElementById('userTabResults').classList.toggle('hidden', tab !== 'results');
+      document.getElementById('userMenuDashboard').classList.toggle('active', tab === 'dashboard');
+      document.getElementById('userMenuResults').classList.toggle('active', tab === 'results');
+      renderUser();
+    }
+
+    function getUserTests(userId) {
+      return state.tests.filter(t => t.userId === userId);
+    }
+
+    function renderUser() {
+      const user = getCurrentUser();
+      if (!user || user.role !== 'user') return;
+      const tests = getUserTests(user.id);
+      const latest = tests[tests.length - 1] || null;
+      const request = state.answerRequests.find(r => r.userId === user.id && r.testId === (latest?.id || ''));
+
+      document.getElementById('userTabDashboard').innerHTML = `
+        <h2 class="section-title">Dashboard uchazeče</h2>
+        <div class="stats">
+          <div class="card stat"><div class="muted">Stav účtu</div><div class="value">${user.approved ? 'Aktivní' : 'Čeká'}</div></div>
+          <div class="card stat"><div class="muted">Povolené pokusy</div><div class="value">${user.attemptsAllowed}</div></div>
+          <div class="card stat"><div class="muted">Poslední stav</div><div class="value">${latest ? latest.status : 'Žádný'}</div></div>
+          <div class="card stat"><div class="muted">Poslední body</div><div class="value">${latest?.score ?? '-'}</div></div>
+        </div>
+        <div class="space"></div>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Spuštění testu</h3>
+            <p class="muted small">Každý test má 30 otázek, 50 bodů a 45 minut. Obnovení stránky test zruší.</p>
+            <button class="btn btn-primary" ${canStartTest(user) ? '' : 'disabled'} onclick="startTest()">Spustit test</button>
+            <div class="small muted" style="margin-top:10px">${startMessage(user, latest)}</div>
+          </div>
+          <div class="card">
+            <h3>Žádost o zobrazení správných odpovědí</h3>
+            <p class="muted small">Správné odpovědi se standardně nezobrazují. Požadavek musí schválit administrátor.</p>
+            <button class="btn btn-secondary" ${latest && latest.status === 'dokončený' && !request ? '' : 'disabled'} onclick="requestAnswers()">Požádat o zobrazení</button>
+            <div class="small muted" style="margin-top:10px">${request ? 'Stav žádosti: ' + request.status : 'Žádná aktivní žádost.'}</div>
+          </div>
+        </div>`;
+
+      document.getElementById('userTabResults').innerHTML = `
+        <h2 class="section-title">Výsledky</h2>
+        ${tests.length ? renderTestsTable(tests, true) : '<p class="muted">Zatím nemáte žádné výsledky.</p>'}`;
+    }
+
+    function canStartTest(user) {
+      const tests = getUserTests(user.id);
+      const unfinished = tests.find(t => t.status === 'probíhá');
+      if (unfinished) return false;
+      const completedOrInvalid = tests.length;
+      return user.attemptsAllowed > completedOrInvalid;
+    }
+
+    function startMessage(user, latest) {
+      if (canStartTest(user)) return 'Test je možné spustit.';
+      if (latest?.status === 'probíhá') return 'Nelze spustit další test, jeden už probíhá.';
+      return 'Další pokus může povolit pouze administrátor.';
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function buildTestQuestions() {
+      const cats = ['Psychologické a logické testy', 'Zákony', 'Zdravověda', 'Dopravní problematika'];
+      let chosen = [];
+      cats.forEach(cat => {
+        const pool = shuffle(state.questions.filter(q => q.category === cat));
+        chosen.push(...pool.slice(0, 7));
+      });
+      const remainingPool = shuffle(state.questions.filter(q => !chosen.some(c => c.id === q.id)));
+      chosen.push(...remainingPool.slice(0, TEST_TOTAL_QUESTIONS - chosen.length));
+      chosen = shuffle(chosen).slice(0, TEST_TOTAL_QUESTIONS);
+
+      let current = chosen.reduce((sum, q) => sum + q.points, 0);
+      while (current !== TEST_TOTAL_POINTS) {
+        if (current > TEST_TOTAL_POINTS) {
+          const candidate = chosen.find(q => q.points > 1);
+          if (!candidate) break;
+          candidate.points -= 1;
+          current -= 1;
+        } else {
+          const candidate = chosen.find(q => q.points < 5);
+          if (!candidate) break;
+          candidate.points += 1;
+          current += 1;
+        }
+      }
+
+      return chosen.map(q => ({
+        ...structuredClone(q),
+        options: q.options ? shuffle(q.options) : undefined,
+        userAnswer: q.type === 'multiple' ? [] : '',
+        isCorrect: null,
+        evaluated: false,
+      }));
+    }
+
+    function startTest() {
+      const user = getCurrentUser();
+      if (!user || user.role !== 'user') return;
+      if (!canStartTest(user)) return alert('Další pokus vám musí povolit administrátor.');
+      const test = {
+        id: uid(),
+        userId: user.id,
+        createdAt: new Date().toISOString(),
+        startedAt: Date.now(),
+        expiresAt: Date.now() + TEST_DURATION_SECONDS * 1000,
+        status: 'probíhá',
+        score: 0,
+        pass: false,
+        currentIndex: 0,
+        questions: buildTestQuestions(),
+        allowCorrectAnswers: false
+      };
+      state.tests.push(test);
+      saveState();
+      showScreen('test');
+      startTimer();
+      window.addEventListener('beforeunload', beforeUnloadHandler);
+    }
+
+    function beforeUnloadHandler() {
+      invalidateCurrentTest('zrušený');
+    }
+
+    function getActiveTest() {
+      const user = getCurrentUser();
+      if (!user) return null;
+      return state.tests.find(t => t.userId === user.id && t.status === 'probíhá') || null;
+    }
+
+    function startTimer() {
+      if (activeTestTimer) clearInterval(activeTestTimer);
+      activeTestTimer = setInterval(() => {
+        const test = getActiveTest();
+        if (!test) {
+          clearInterval(activeTestTimer);
+          activeTestTimer = null;
+          return;
+        }
+        const left = Math.max(0, Math.floor((test.expiresAt - Date.now()) / 1000));
+        updateTimer(left);
+        if (left <= 0) {
+          finishTest(true);
+        }
+      }, 1000);
+    }
+
+    function updateTimer(left) {
+      const min = String(Math.floor(left / 60)).padStart(2, '0');
+      const sec = String(left % 60).padStart(2, '0');
+      const el = document.getElementById('timer');
+      if (el) el.textContent = `${min}:${sec}`;
+    }
+
+    function renderTest() {
+      const test = getActiveTest();
+      if (!test) {
+        showScreen('user');
+        return;
+      }
+      const q = test.questions[test.currentIndex];
+      document.getElementById('testCategoryBadge').textContent = q.category;
+      document.getElementById('testQuestionTitle').textContent = `Otázka ${test.currentIndex + 1} z ${test.questions.length}`;
+      document.getElementById('testQuestionMeta').textContent = `${q.points} bodů • Typ: ${q.type === 'single' ? 'jedna odpověď' : q.type === 'multiple' ? 'více odpovědí' : 'otevřená odpověď'}`;
+      document.getElementById('questionText').innerHTML = `<div style="font-size:20px;line-height:1.6">${escapeHtml(q.question)}</div>`;
+      const fill = ((test.currentIndex + 1) / test.questions.length) * 100;
+      document.getElementById('progressFill').style.width = fill + '%';
+
+      const image = document.getElementById('questionImage');
+      if (q.image) {
+        image.src = q.image;
+        image.classList.remove('hidden');
+      } else {
+        image.classList.add('hidden');
+      }
+
+      const wrap = document.getElementById('questionOptions');
+      wrap.innerHTML = '';
+
+      if (q.type === 'open') {
+        wrap.innerHTML = `
+          <div class="input-group">
+            <label>Vaše odpověď</label>
+            <textarea id="openAnswer" oninput="saveOpenAnswer()">${escapeHtml(q.userAnswer || '')}</textarea>
+          </div>
+          <button class="btn btn-primary" onclick="evaluateCurrentQuestion()">Vyhodnotit odpověď</button>`;
+      } else {
+        q.options.forEach((opt, idx) => {
+          const checked = q.type === 'single'
+            ? q.userAnswer === opt
+            : Array.isArray(q.userAnswer) && q.userAnswer.includes(opt);
+          const control = q.type === 'single'
+            ? `<input type="radio" name="option" ${checked ? 'checked' : ''} onchange="selectSingle(${idx})" />`
+            : `<input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleMulti(${idx})" />`;
+          let cls = 'option';
+          if (q.evaluated) {
+            if (q.correctAnswers.includes(opt)) cls += ' correct';
+            if (checked && !q.correctAnswers.includes(opt)) cls += ' incorrect';
+          }
+          wrap.innerHTML += `<label class="${cls}">${control}<span>${escapeHtml(opt)}</span></label>`;
+        });
+        wrap.innerHTML += `<button class="btn btn-primary" onclick="evaluateCurrentQuestion()">Vyhodnotit odpověď</button>`;
+      }
+
+      const feedback = document.getElementById('questionFeedback');
+      feedback.className = 'feedback';
+      feedback.textContent = '';
+      if (q.evaluated) {
+        feedback.classList.add('show', q.isCorrect ? 'correct' : 'incorrect');
+        feedback.innerHTML = q.isCorrect
+          ? `Správně. ${escapeHtml(q.explanation)}`
+          : `Špatně. ${escapeHtml(q.explanation)}${test.allowCorrectAnswers ? '<br><strong>Správná odpověď:</strong> ' + escapeHtml(q.correctAnswers.join(', ')) : ''}`;
+      }
+
+      updateTimer(Math.max(0, Math.floor((test.expiresAt - Date.now()) / 1000)));
+    }
+
+    function saveOpenAnswer() {
+      const test = getActiveTest();
+      if (!test) return;
+      test.questions[test.currentIndex].userAnswer = document.getElementById('openAnswer').value;
+      saveState();
+    }
+
+    function selectSingle(index) {
+      const test = getActiveTest();
+      const q = test.questions[test.currentIndex];
+      q.userAnswer = q.options[index];
+      q.evaluated = false;
+      saveState();
+    }
+
+    function toggleMulti(index) {
+      const test = getActiveTest();
+      const q = test.questions[test.currentIndex];
+      if (!Array.isArray(q.userAnswer)) q.userAnswer = [];
+      const val = q.options[index];
+      if (q.userAnswer.includes(val)) q.userAnswer = q.userAnswer.filter(v => v !== val);
+      else q.userAnswer.push(val);
+      q.evaluated = false;
+      saveState();
+    }
+
+    function arraysEqualAsSet(a, b) {
+      if (a.length !== b.length) return false;
+      const sa = [...a].sort();
+      const sb = [...b].sort();
+      return sa.every((v, i) => v === sb[i]);
+    }
+
+    function evaluateCurrentQuestion() {
+      const test = getActiveTest();
+      const q = test.questions[test.currentIndex];
+      if (q.type === 'open') {
+        const ans = (q.userAnswer || '').trim();
+        if (!ans) return alert('Zadejte odpověď.');
+        q.isCorrect = q.correctAnswers.includes(ans);
+      } else if (q.type === 'single') {
+        if (!q.userAnswer) return alert('Vyberte odpověď.');
+        q.isCorrect = q.correctAnswers.includes(q.userAnswer);
+      } else {
+        q.isCorrect = arraysEqualAsSet(q.userAnswer || [], q.correctAnswers);
+      }
+      q.evaluated = true;
+      saveState();
+      renderTest();
+    }
+
+    function prevQuestion() {
+      const test = getActiveTest();
+      if (!test) return;
+      if (test.currentIndex > 0) test.currentIndex -= 1;
+      saveState();
+      renderTest();
+    }
+
+    function nextQuestion() {
+      const test = getActiveTest();
+      if (!test) return;
+      if (test.currentIndex < test.questions.length - 1) test.currentIndex += 1;
+      saveState();
+      renderTest();
+    }
+
+    function saveProgress() {
+      saveState();
+      alert('Průběh testu byl uložen.');
+    }
+
+    function finishTest(auto = false) {
+      const test = getActiveTest();
+      if (!test) return;
+      if (activeTestTimer) clearInterval(activeTestTimer);
+      activeTestTimer = null;
+      let score = 0;
+      test.questions.forEach(q => {
+        if (q.type === 'open' && !q.evaluated && (q.userAnswer || '').trim()) {
+          q.isCorrect = q.correctAnswers.includes((q.userAnswer || '').trim());
+          q.evaluated = true;
+        }
+        if (q.type === 'single' && !q.evaluated && q.userAnswer) {
+          q.isCorrect = q.correctAnswers.includes(q.userAnswer);
+          q.evaluated = true;
+        }
+        if (q.type === 'multiple' && !q.evaluated && Array.isArray(q.userAnswer)) {
+          q.isCorrect = arraysEqualAsSet(q.userAnswer, q.correctAnswers);
+          q.evaluated = true;
+        }
+        if (q.isCorrect) score += q.points;
+      });
+      test.score = score;
+      test.pass = score >= PASS_SCORE;
+      test.status = 'dokončený';
+      test.finishedAt = new Date().toISOString();
+      saveState();
+      window.removeEventListener('beforeunload', beforeUnloadHandler);
+      alert(auto ? 'Vypršel čas. Test byl automaticky odevzdán.' : 'Test byl odevzdán.');
+      showScreen('user');
+      showUserTab('results');
+    }
+
+    function invalidateCurrentTest(status) {
+      const test = getActiveTest();
+      if (!test) return;
+      test.status = status;
+      test.finishedAt = new Date().toISOString();
+      saveState();
+    }
+
+    function requestAnswers() {
+      const user = getCurrentUser();
+      const tests = getUserTests(user.id);
+      const latest = tests[tests.length - 1];
+      if (!latest) return;
+      state.answerRequests.push({ id: uid(), userId: user.id, testId: latest.id, status: 'čeká', createdAt: new Date().toISOString() });
+      saveState();
+      renderUser();
+      alert('Žádost byla odeslána administrátorovi.');
+    }
+
+    function renderTestsTable(tests, forUser = false, forAdmin = false) {
+      return `<div class="table-wrap"><table>
+        <thead><tr><th>Datum</th>${forAdmin ? '<th>Uchazeč</th><th>Spuštěno</th><th>Odevzdáno</th>' : ''}<th>Stav</th><th>Body</th><th>Splnil</th><th>Detail</th></tr></thead>
+        <tbody>
+          ${tests.map(t => {
+            const wrong = t.questions?.filter(q => q.evaluated && !q.isCorrect).length ?? 0;
+            const testUser = state.users.find(u => u.id === t.userId);
+            const startedAtText = t.startedAt ? new Date(t.startedAt).toLocaleString('cs-CZ') : '-';
+            const finishedAtText = t.finishedAt ? new Date(t.finishedAt).toLocaleString('cs-CZ') : (t.status === 'probíhá' ? 'Probíhá' : '-');
+            return `<tr>
+              <td>${new Date(t.createdAt).toLocaleString('cs-CZ')}</td>
+              ${forAdmin ? `<td>${escapeHtml(testUser?.username || 'Neznámý uchazeč')}</td><td>${startedAtText}</td><td>${finishedAtText}</td>` : ''}
+              <td>${t.status}</td>
+              <td>${t.score ?? '-'} / ${TEST_TOTAL_POINTS}</td>
+              <td>${t.pass ? 'Ano' : 'Ne'}</td>
+              <td>${wrong} chyb</td>
+            </tr>
+            ${forAdmin ? `<tr><td colspan="${forAdmin ? '8' : '5'}">${renderAdminAnswers(t, testUser)}</td></tr>` : ''}`;
+          }).join('')}
+        </tbody></table></div>
+        ${forUser ? tests.map(t => `<div class="card" style="margin-top:12px"><strong>Pokus ${new Date(t.createdAt).toLocaleString('cs-CZ')}</strong><div class="small muted" style="margin-top:8px">${t.questions?.filter(q => q.evaluated && !q.isCorrect).map(q => '• ' + q.question).join('<br>') || 'Bez detailu.'}</div></div>`).join('') : ''}`;
+    }
+
+    function renderAdminAnswers(test, testUser = null) {
+      if (!test.questions || !test.questions.length) {
+        return '<div class="muted">U tohoto testu nejsou uložené žádné odpovědi.</div>';
+      }
+
+      const startedAtText = test.startedAt ? new Date(test.startedAt).toLocaleString('cs-CZ') : '-';
+      const finishedAtText = test.finishedAt ? new Date(test.finishedAt).toLocaleString('cs-CZ') : (test.status === 'probíhá' ? 'Probíhá' : '-');
+
+      return `<div>
+        <div class="card" style="margin-top:8px;margin-bottom:16px;background:rgba(15,23,42,.78)">
+          <div class="grid-2">
+            <div>
+              <div class="small muted">Uchazeč</div>
+              <div style="font-weight:700;font-size:18px">${escapeHtml(testUser?.username || 'Neznámý uchazeč')}</div>
+            </div>
+            <div>
+              <div class="small muted">Výsledek testu</div>
+              <div style="font-weight:700;font-size:18px">${test.score ?? '-'} / ${TEST_TOTAL_POINTS} bodů • ${test.pass ? 'Splnil' : 'Nesplnil'}</div>
+            </div>
+            <div>
+              <div class="small muted">Spuštěno</div>
+              <div>${startedAtText}</div>
+            </div>
+            <div>
+              <div class="small muted">Odevzdáno</div>
+              <div>${finishedAtText}</div>
+            </div>
+          </div>
+        </div>
+        ${(test.questions || []).map((q, index) => {
+          const userAnswer = q.type === 'multiple'
+            ? ((q.userAnswer && q.userAnswer.length) ? q.userAnswer.join(', ') : 'Bez odpovědi')
+            : (q.userAnswer || 'Bez odpovědi');
+          const correctAnswer = (q.correctAnswers || []).join(', ');
+          const resultClass = q.isCorrect ? 'correct' : 'wrong';
+          const resultLabelClass = q.isCorrect ? 'answer-result-correct' : 'answer-result-wrong';
+          const resultLabel = q.isCorrect ? 'Správně' : 'Nesprávně';
+
+          return `<div class="admin-answer-card ${resultClass}">
+            <div class="row" style="justify-content:space-between;align-items:flex-start">
+              <div>
+                <strong>Otázka ${index + 1}</strong>
+                <div class="small muted" style="margin-top:6px">${escapeHtml(q.category)}</div>
+              </div>
+              <span class="${resultLabelClass}">${resultLabel}</span>
+            </div>
+            <div style="margin-top:12px"><strong>Zadání:</strong><br>${escapeHtml(q.question)}</div>
+            <div style="margin-top:12px;color:${q.isCorrect ? '#bbf7d0' : '#fecaca'}"><strong>Odpověď uchazeče:</strong><br>${escapeHtml(userAnswer)}</div>
+            <div style="margin-top:12px;color:#bbf7d0"><strong>Správná odpověď:</strong><br>${escapeHtml(correctAnswer)}</div>
+            <div style="margin-top:12px" class="small muted">Body: ${q.isCorrect ? q.points : 0} / ${q.points}</div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    }
+
+    function showAdminTab(tab) {
+      ['overview','registrations','users','createUser','questions','results'].forEach(id => {
+        document.getElementById('adminTab' + capitalize(id)).classList.add('hidden');
+        const menu = document.getElementById('adminMenu' + capitalize(id));
+        if (menu) menu.classList.remove('active');
+      });
+      document.getElementById('adminTab' + capitalize(tab)).classList.remove('hidden');
+      const menu = document.getElementById('adminMenu' + capitalize(tab));
+      if (menu) menu.classList.add('active');
+      renderAdmin();
+    }
+
+    function capitalize(str) { return str.charAt(0).toUpperCase() + str.slice(1); }
+
+    function renderAdmin() {
+      const user = getCurrentUser();
+      if (!user || user.role !== 'admin') return;
+      const registrations = state.users.filter(u => u.role === 'user' && !u.approved);
+      const tests = state.tests;
+      const completed = tests.filter(t => t.status === 'dokončený');
+      const passRate = completed.length ? Math.round((completed.filter(t => t.pass).length / completed.length) * 100) : 0;
+
+      document.getElementById('adminTabOverview').innerHTML = `
+        <h2 class="section-title">Přehled administrace</h2>
+        <div class="stats">
+          <div class="card stat"><div class="muted">Uživatelé</div><div class="value">${state.users.filter(u => u.role === 'user').length}</div></div>
+          <div class="card stat"><div class="muted">Čekající registrace</div><div class="value">${registrations.length}</div></div>
+          <div class="card stat"><div class="muted">Dokončené testy</div><div class="value">${completed.length}</div></div>
+          <div class="card stat"><div class="muted">Úspěšnost</div><div class="value">${passRate}%</div></div>
+        </div>
+        <div class="space"></div>
+        <div class="grid-2">
+          <div class="card"><h3>Kategorie</h3><div class="pill-row"><span class="pill">Psychologické a logické testy</span><span class="pill">Zákony</span><span class="pill">Zdravověda</span><span class="pill">Dopravní problematika</span></div></div>
+          <div class="card"><h3>Rychlé přístupy</h3><div class="row"><button class="btn btn-secondary" onclick="showAdminTab('registrations')">Registrace</button><button class="btn btn-secondary" onclick="showAdminTab('createUser')">Vytvořit účet</button><button class="btn btn-secondary" onclick="showAdminTab('questions')">Otázky</button></div></div>
+        </div>`;
+
+      document.getElementById('adminTabRegistrations').innerHTML = `
+        <h2 class="section-title">Čekající registrace</h2>
+        ${registrations.length ? `<div class="table-wrap"><table><thead><tr><th>Uživatel</th><th>E-mail</th><th>Akce</th></tr></thead><tbody>${registrations.map(u => `<tr><td>${escapeHtml(u.username)}</td><td>${escapeHtml(u.email)}</td><td><div class="row"><button class="btn btn-success" onclick="approveUser('${u.id}')">Schválit</button><button class="btn btn-danger" onclick="rejectUser('${u.id}')">Smazat</button></div></td></tr>`).join('')}</tbody></table></div>` : '<p class="muted">Žádné čekající registrace.</p>'}`;
+
+      const users = state.users.filter(u => u.role === 'user');
+      document.getElementById('adminTabUsers').innerHTML = `
+        <h2 class="section-title">Správa uživatelů</h2>
+        <div class="table-wrap"><table>
+          <thead><tr><th>Uživatel</th><th>E-mail</th><th>Stav</th><th>Pokusy</th><th>Akce</th></tr></thead>
+          <tbody>
+            ${users.map(u => `<tr>
+              <td>${escapeHtml(u.username)}</td>
+              <td>${escapeHtml(u.email)}</td>
+              <td>${u.active ? 'Aktivní' : 'Neaktivní'}</td>
+              <td>${u.attemptsAllowed}</td>
+              <td>
+                <div class="row">
+                  <button class="btn btn-secondary" onclick="toggleUserActive('${u.id}')">${u.active ? 'Deaktivovat' : 'Aktivovat'}</button>
+                  <button class="btn btn-primary" onclick="allowAttempt('${u.id}')">Povolit další pokus</button>
+                </div>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>`;
+
+      document.getElementById('adminTabCreateUser').innerHTML = `
+        <h2 class="section-title">Vytvořit účet administrátorem</h2>
+        <div class="grid-2">
+          <div class="input-group"><label>Uživatelské jméno</label><input id="adminCreateUsername"></div>
+          <div class="input-group"><label>E-mail</label><input id="adminCreateEmail" type="email"></div>
+        </div>
+        <div class="grid-2">
+          <div class="input-group"><label>Heslo</label><input id="adminCreatePassword" type="password"></div>
+          <div class="input-group"><label>Role</label><select id="adminCreateRole"><option value="user">Uživatel</option><option value="admin">Administrátor</option></select></div>
+        </div>
+        <button class="btn btn-primary" onclick="adminCreateUser()">Vytvořit účet</button>`;
+
+      const categories = ['Psychologické a logické testy', 'Zákony', 'Zdravověda', 'Dopravní problematika'];
+      document.getElementById('adminTabQuestions').innerHTML = `
+        <h2 class="section-title">Otázky</h2>
+        <div class="grid-2">
+          <div class="input-group"><label>Kategorie</label><select id="qCategory">${categories.map(c => `<option>${c}</option>`).join('')}</select></div>
+          <div class="input-group"><label>Typ otázky</label><select id="qType"><option value="single">Jedna odpověď</option><option value="multiple">Více odpovědí</option><option value="open">Otevřená odpověď</option></select></div>
+        </div>
+        <div class="input-group"><label>Text otázky</label><textarea id="qText"></textarea></div>
+        <div class="input-group"><label>Možnosti odpovědí (oddělte | )</label><input id="qOptions" placeholder="A|B|C"></div>
+        <div class="input-group"><label>Správné odpovědi (oddělte | )</label><input id="qCorrect" placeholder="Správná odpověď"></div>
+        <div class="grid-2">
+          <div class="input-group"><label>Body</label><input id="qPoints" type="number" min="1" max="5" value="1"></div>
+          <div class="input-group"><label>URL obrázku (volitelné)</label><input id="qImage"></div>
+        </div>
+        <div class="input-group"><label>Vysvětlení</label><textarea id="qExplanation"></textarea></div>
+        <button class="btn btn-primary" onclick="addQuestion()">Přidat otázku</button>
+        <div class="space"></div>
+        <div class="table-wrap"><table><thead><tr><th>Kategorie</th><th>Otázka</th><th>Body</th><th>Typ</th></tr></thead><tbody>${state.questions.slice(0, 80).map(q => `<tr><td>${escapeHtml(q.category)}</td><td>${escapeHtml(q.question)}</td><td>${q.points}</td><td>${q.type}</td></tr>`).join('')}</tbody></table></div>`;
+
+      document.getElementById('adminTabResults').innerHTML = `
+        <h2 class="section-title">Výsledky a žádosti</h2>
+        ${renderTestsTable(tests, false, true)}
+        <div class="space"></div>
+        <h3>Žádosti o zobrazení správných odpovědí</h3>
+        ${state.answerRequests.length ? `<div class="table-wrap"><table><thead><tr><th>Uživatel</th><th>Datum</th><th>Stav</th><th>Akce</th></tr></thead><tbody>${state.answerRequests.map(r => {
+          const u = state.users.find(x => x.id === r.userId);
+          return `<tr><td>${escapeHtml(u?.username || '')}</td><td>${new Date(r.createdAt).toLocaleString('cs-CZ')}</td><td>${r.status}</td><td><button class="btn btn-success" onclick="approveAnswerRequest('${r.id}')">Schválit</button></td></tr>`;
+        }).join('')}</tbody></table></div>` : '<p class="muted">Žádné žádosti.</p>'}`;
+    }
+
+    function approveUser(id) {
+      const user = state.users.find(u => u.id === id);
+      if (!user) return;
+      user.approved = true;
+      user.active = true;
+      saveState();
+      renderAdmin();
+    }
+
+    function rejectUser(id) {
+      state.users = state.users.filter(u => u.id !== id);
+      saveState();
+      renderAdmin();
+    }
+
+    function toggleUserActive(id) {
+      const user = state.users.find(u => u.id === id);
+      if (!user) return;
+      user.active = !user.active;
+      saveState();
+      renderAdmin();
+    }
+
+    function allowAttempt(id) {
+      const user = state.users.find(u => u.id === id);
+      if (!user) return;
+      user.attemptsAllowed += 1;
+      saveState();
+      renderAdmin();
+    }
+
+    function adminCreateUser() {
+      const username = document.getElementById('adminCreateUsername').value.trim();
+      const email = document.getElementById('adminCreateEmail').value.trim().toLowerCase();
+      const password = document.getElementById('adminCreatePassword').value;
+      const role = document.getElementById('adminCreateRole').value;
+      if (!username || !email || !password) return alert('Vyplňte všechna pole.');
+      if (state.users.some(u => u.username === username || u.email === email)) return alert('Uživatel nebo e-mail už existuje.');
+      state.users.push({ id: uid(), username, email, password, role, approved: true, active: true, attemptsAllowed: role === 'admin' ? 99 : 1, createdByAdmin: true });
+      saveState();
+      renderAdmin();
+      alert('Účet byl vytvořen.');
+    }
+
+    function addQuestion() {
+      const category = document.getElementById('qCategory').value;
+      const type = document.getElementById('qType').value;
+      const question = document.getElementById('qText').value.trim();
+      const options = document.getElementById('qOptions').value.trim();
+      const correct = document.getElementById('qCorrect').value.trim();
+      const points = Number(document.getElementById('qPoints').value || 1);
+      const explanation = document.getElementById('qExplanation').value.trim();
+      const image = document.getElementById('qImage').value.trim();
+      if (!question || !correct) return alert('Vyplňte alespoň otázku a správnou odpověď.');
+      state.questions.push({
+        id: uid(), category, type, question,
+        options: type === 'open' ? undefined : options.split('|').map(s => s.trim()).filter(Boolean),
+        correctAnswers: correct.split('|').map(s => s.trim()).filter(Boolean),
+        explanation, points: Math.min(5, Math.max(1, points)), image: image || undefined
+      });
+      saveState();
+      renderAdmin();
+      alert('Otázka byla přidána.');
+    }
+
+    function approveAnswerRequest(id) {
+      const request = state.answerRequests.find(r => r.id === id);
+      if (!request) return;
+      request.status = 'schváleno';
+      const test = state.tests.find(t => t.id === request.testId);
+      if (test) test.allowCorrectAnswers = true;
+      saveState();
+      renderAdmin();
+    }
+
+    window.addEventListener('visibilitychange', () => {
+      if (document.hidden && getActiveTest()) invalidateCurrentTest('zrušený');
+    });
+
+    window.addEventListener('pagehide', () => {
+      if (getActiveTest()) invalidateCurrentTest('zrušený');
+    });
+
+    renderTopActions();
+    showScreen('home');
+  </script>
+</body>
+</html>
