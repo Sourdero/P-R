@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="cs">
 <head>
@@ -21,7 +22,6 @@
       --shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
       --radius: 18px;
     }
-
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -342,7 +342,16 @@
               <p class="small muted">Body, chyby, stav splnil/nesplnil a detailní historie pokusů.</p>
             </div>
           </div>
-          <p class="footer-note">Demo verze běží čistě v HTML, CSS a JavaScriptu. Data se ukládají do localStorage, takže funguje okamžitě po otevření souboru.</p>
+          <p class="footer-note">Policie ČR – Krajské ředitelství hlavního města Prahy
+Gratulujeme vám k dosažení této závěrečné fáze.
+
+Tento test je posledním krokem, který vás dělí od úspěšného zakončení vaší přípravy.
+
+Přistupujte k němu s chladnou hlavou a soustředěním, které je pro práci u policie klíčové.
+
+Věříme ve vaše schopnosti.
+
+Hodně štěstí!</p>
         </div>
       </div>
     </section>
@@ -1325,8 +1334,31 @@
       if (getActiveTest()) invalidateCurrentTest('zrušený');
     });
 
-    renderTopActions();
+      renderTopActions();
     showScreen('home');
   </script>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
+  import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAwftViQjMSQy9zzUrGGEGf7UIJUAKacAw",
+    authDomain: "pcrtesty-3f1ba.firebaseapp.com",
+    projectId: "pcrtesty-3f1ba",
+    storageBucket: "pcrtesty-3f1ba.firebasestorage.app",
+    messagingSenderId: "925881328820",
+    appId: "1:925881328820:web:b7fe5f3603ae4c9b5de3e1",
+    measurementId: "G-G77RXMKN5F"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  window.db = db;
+
+  console.log("🔥 Firebase připojen");
+</script>
+
 </body>
 </html>
