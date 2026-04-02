@@ -1169,6 +1169,7 @@
                 <div class="row">
                   <button class="btn btn-secondary" onclick="toggleUserActive('${u.id}')">${u.active ? 'Deaktivovat' : 'Aktivovat'}</button>
                   <button class="btn btn-primary" onclick="allowAttempt('${u.id}')">Povolit další pokus</button>
+                  <button class="btn btn-danger" onclick="deleteUser('${u.id}')">Smazat</button>
                 </div>
               </td>
             </tr>`).join('')}
@@ -1247,6 +1248,30 @@
       saveState();
       renderAdmin();
     }
+
+    function deleteUser(id) {
+  const user = state.users.find(u => u.id === id);
+  if (!user) return;
+
+  if (!confirm("Opravdu chceš smazat uživatele " + user.username + "?")) return;
+
+  // smaže testy uživatele
+  state.tests = state.tests.filter(t => t.userId !== id);
+
+  // smaže žádosti
+  state.answerRequests = state.answerRequests.filter(r => r.userId !== id);
+
+  // smaže uživatele
+  state.users = state.users.filter(u => u.id !== id);
+
+  // odhlásí ho pokud je přihlášený
+  if (state.currentUserId === id) {
+    state.currentUserId = null;
+  }
+
+  saveState();
+  renderAdmin();
+}
 
     function adminCreateUser() {
       const username = document.getElementById('adminCreateUsername').value.trim();
