@@ -615,8 +615,6 @@
     let activeTestTimer = null;
 
     function loadState() {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) return JSON.parse(raw);
       const initial = {
         users: [
           { id: uid(), username: 'admin', email: 'admin@pcr.local', password: 'admin123', role: 'admin', approved: true, active: true, attemptsAllowed: 99, createdByAdmin: true },
