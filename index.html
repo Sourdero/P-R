@@ -1303,5 +1303,36 @@
     renderTopActions();
     showScreen('home');
   </script>
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+
+<input id="input" placeholder="Napiš text">
+<button onclick="ulozit()">Uložit</button>
+
+<script>
+const supabaseClient = supabase.createClient(
+  "https://qdzrgrpcigjkidncnzij.supabase.co",
+  "sb_publishable_FrgDixNEA2grLoXrZuqQTQ_rBHUzzLj"
+);
+
+async function ulozit() {
+  const text = document.getElementById("input").value;
+
+  const { data, error } = await supabaseClient
+    .from('data')
+    .insert([{ text: text }]);
+
+  if (error) {
+    alert("Chyba: " + error.message);
+  } else {
+    alert("Uloženo!");
+  }
+}
+</script>
+
 </body>
 </html>
