@@ -66,7 +66,7 @@
       border-radius: 12px;
       display: grid;
       place-items: center;
-      background: linear-gradient(135deg, var(--primary), #0ea5e9);
+      background: transparent;
       box-shadow: var(--shadow);
       font-size: 18px;
     }
@@ -74,25 +74,6 @@
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-    .topbar-right {
-      margin-left: auto;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-    .topbar-logo-right {
-      width: 52px;
-      height: 52px;
-      border-radius: 14px;
-      object-fit: contain;
-      background: rgba(255,255,255,.95);
-      padding: 4px;
-      box-shadow: var(--shadow);
-      flex: 0 0 auto;
     }
     .btn, button {
       border: 0;
@@ -295,14 +276,6 @@
     @media (max-width: 980px) {
       .hero, .dashboard-grid, .grid-3, .grid-2, .stats { grid-template-columns: 1fr; }
       .topbar-inner { align-items: flex-start; flex-direction: column; }
-      .topbar-right {
-        width: 100%;
-        justify-content: space-between;
-      }
-      .topbar-logo-right {
-        width: 46px;
-        height: 46px;
-      }
     }
   </style>
 </head>
@@ -310,17 +283,13 @@
   <header class="topbar">
     <div class="container topbar-inner">
       <div class="brand">
+        <img src="logo.png" class="logo">
         <div>
           <div>Testy PČR</div>
           <div class="small muted">Online testovací systém</div>
         </div>
       </div>
-      <div class="topbar-right">
-        <div class="nav-actions" id="topActions"></div>
-        <a href="https://www.policie.cz" target="_blank">
-          <img src="pčr.png" alt="Logo Policie České republiky" class="topbar-logo-right" />
-        </a>
-      </div>
+      <div class="nav-actions" id="topActions"></div>
     </div>
   </header>
 
@@ -615,6 +584,8 @@
     let activeTestTimer = null;
 
     function loadState() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
       const initial = {
         users: [
           { id: uid(), username: 'admin', email: 'admin@pcr.local', password: 'admin123', role: 'admin', approved: true, active: true, attemptsAllowed: 99, createdByAdmin: true },
@@ -672,70 +643,32 @@
       return str.replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[m]));
     }
 
-    async function registerUser() {
+    function registerUser() {
       const username = document.getElementById('regUsername').value.trim();
       const email = document.getElementById('regEmail').value.trim().toLowerCase();
       const password = document.getElementById('regPassword').value;
       if (!username || !email || !password) return alert('Vyplňte všechna pole.');
-
-      try {
-        const { createUserWithEmailAndPassword, secondaryAuth, db, doc, setDoc, serverTimestamp } = window.firebaseServices;
-        const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-        await setDoc(doc(db, 'users', cred.user.uid), {
-          username,
-          email,
-          role: 'user',
-          approved: false,
-          active: false,
-          attemptsAllowed: 1,
-          createdByAdmin: false,
-          createdAt: serverTimestamp()
-        });
-        await secondaryAuth.signOut();
-        await syncUsersFromFirestore();
-        saveState();
-        alert('Registrace byla odeslána. Počkejte na schválení administrátorem.');
-        showScreen('login');
-      } catch (error) {
-        alert('Registrace selhala: ' + (error.message || error));
-      }
+      if (state.users.some(u => u.username === username || u.email === email)) return alert('Uživatel nebo e-mail už existuje.');
+      state.users.push({ id: uid(), username, email, password, role: 'user', approved: false, active: false, attemptsAllowed: 1, createdByAdmin: false });
+      saveState();
+      alert('Registrace byla odeslána. Počkejte na schválení administrátorem.');
+      showScreen('login');
     }
 
-    async function loginUser() {
+    function loginUser() {
       const identity = document.getElementById('loginIdentity').value.trim().toLowerCase();
       const password = document.getElementById('loginPassword').value;
-      try {
-        const { signInWithEmailAndPassword, auth, db, doc, getDoc } = window.firebaseServices;
-        const cred = await signInWithEmailAndPassword(auth, identity, password);
-        const snap = await getDoc(doc(db, 'users', cred.user.uid));
-        if (!snap.exists()) {
-          alert('Profil uživatele nebyl nalezen.');
-          return;
-        }
-        const profile = { id: snap.id, ...snap.data() };
-        if (!profile.approved || !profile.active) {
-          alert('Účet ještě není aktivní nebo nebyl schválen administrátorem.');
-          return;
-        }
-        state.currentUserId = cred.user.uid;
-        await syncAllFirestoreData();
-        saveState();
-        showScreen(profile.role === 'admin' ? 'admin' : 'user');
-      } catch (error) {
-        alert('Neplatné přihlašovací údaje.');
-      }
+      const user = state.users.find(u => (u.email.toLowerCase() === identity || u.username.toLowerCase() === identity) && u.password === password);
+      if (!user) return alert('Neplatné přihlašovací údaje.');
+      if (!user.approved || !user.active) return alert('Účet ještě není aktivní nebo nebyl schválen administrátorem.');
+      state.currentUserId = user.id;
+      saveState();
+      showScreen(user.role === 'admin' ? 'admin' : 'user');
     }
 
-    async function logout() {
+    function logout() {
       if (activeTestTimer) clearInterval(activeTestTimer);
       activeTestTimer = null;
-      try {
-        if (window.firebaseServices?.auth) {
-          await window.firebaseServices.signOut(window.firebaseServices.auth);
-        }
-      } catch (error) {
-        console.error(error);
-      }
       state.currentUserId = null;
       saveState();
       showScreen('home');
@@ -859,7 +792,7 @@
       }));
     }
 
-    async function startTest() {
+    function startTest() {
       const user = getCurrentUser();
       if (!user || user.role !== 'user') return;
       if (!canStartTest(user)) return alert('Další pokus vám musí povolit administrátor.');
@@ -878,7 +811,6 @@
       };
       state.tests.push(test);
       saveState();
-      await persistTestToFirestore(test);
       showScreen('test');
       startTimer();
       window.addEventListener('beforeunload', beforeUnloadHandler);
@@ -981,24 +913,22 @@
       updateTimer(Math.max(0, Math.floor((test.expiresAt - Date.now()) / 1000)));
     }
 
-    async function saveOpenAnswer() {
+    function saveOpenAnswer() {
       const test = getActiveTest();
       if (!test) return;
       test.questions[test.currentIndex].userAnswer = document.getElementById('openAnswer').value;
       saveState();
-      await persistTestToFirestore(test);
     }
 
-    async function selectSingle(index) {
+    function selectSingle(index) {
       const test = getActiveTest();
       const q = test.questions[test.currentIndex];
       q.userAnswer = q.options[index];
       q.evaluated = false;
       saveState();
-      await persistTestToFirestore(test);
     }
 
-    async function toggleMulti(index) {
+    function toggleMulti(index) {
       const test = getActiveTest();
       const q = test.questions[test.currentIndex];
       if (!Array.isArray(q.userAnswer)) q.userAnswer = [];
@@ -1007,7 +937,6 @@
       else q.userAnswer.push(val);
       q.evaluated = false;
       saveState();
-      await persistTestToFirestore(test);
     }
 
     function arraysEqualAsSet(a, b) {
@@ -1017,7 +946,7 @@
       return sa.every((v, i) => v === sb[i]);
     }
 
-    async function evaluateCurrentQuestion() {
+    function evaluateCurrentQuestion() {
       const test = getActiveTest();
       const q = test.questions[test.currentIndex];
       if (q.type === 'open') {
@@ -1032,36 +961,31 @@
       }
       q.evaluated = true;
       saveState();
-      await persistTestToFirestore(test);
       renderTest();
     }
 
-    async function prevQuestion() {
+    function prevQuestion() {
       const test = getActiveTest();
       if (!test) return;
       if (test.currentIndex > 0) test.currentIndex -= 1;
       saveState();
-      await persistTestToFirestore(test);
       renderTest();
     }
 
-    async function nextQuestion() {
+    function nextQuestion() {
       const test = getActiveTest();
       if (!test) return;
       if (test.currentIndex < test.questions.length - 1) test.currentIndex += 1;
       saveState();
-      await persistTestToFirestore(test);
       renderTest();
     }
 
-    async function saveProgress() {
-      const test = getActiveTest();
+    function saveProgress() {
       saveState();
-      if (test) await persistTestToFirestore(test);
       alert('Průběh testu byl uložen.');
     }
 
-    async function finishTest(auto = false) {
+    function finishTest(auto = false) {
       const test = getActiveTest();
       if (!test) return;
       if (activeTestTimer) clearInterval(activeTestTimer);
@@ -1087,33 +1011,27 @@
       test.status = 'dokončený';
       test.finishedAt = new Date().toISOString();
       saveState();
-      await persistTestToFirestore(test);
       window.removeEventListener('beforeunload', beforeUnloadHandler);
       alert(auto ? 'Vypršel čas. Test byl automaticky odevzdán.' : 'Test byl odevzdán.');
-      await syncTestsFromFirestore();
       showScreen('user');
       showUserTab('results');
     }
 
-    async function invalidateCurrentTest(status) {
+    function invalidateCurrentTest(status) {
       const test = getActiveTest();
       if (!test) return;
       test.status = status;
       test.finishedAt = new Date().toISOString();
       saveState();
-      await persistTestToFirestore(test);
     }
 
-    async function requestAnswers() {
+    function requestAnswers() {
       const user = getCurrentUser();
       const tests = getUserTests(user.id);
       const latest = tests[tests.length - 1];
       if (!latest) return;
-      const request = { id: uid(), userId: user.id, testId: latest.id, status: 'čeká', createdAt: new Date().toISOString() };
-      state.answerRequests.push(request);
+      state.answerRequests.push({ id: uid(), userId: user.id, testId: latest.id, status: 'čeká', createdAt: new Date().toISOString() });
       saveState();
-      await window.firebaseServices.setDoc(window.firebaseServices.doc(window.firebaseServices.db, 'answerRequests', request.id), request);
-      await syncAnswerRequestsFromFirestore();
       renderUser();
       alert('Žádost byla odeslána administrátorovi.');
     }
@@ -1251,7 +1169,6 @@
                 <div class="row">
                   <button class="btn btn-secondary" onclick="toggleUserActive('${u.id}')">${u.active ? 'Deaktivovat' : 'Aktivovat'}</button>
                   <button class="btn btn-primary" onclick="allowAttempt('${u.id}')">Povolit další pokus</button>
-                  <button class="btn btn-danger" onclick="deleteUser('${u.id}')">Smazat</button>
                 </div>
               </td>
             </tr>`).join('')}
@@ -1300,104 +1217,48 @@
         }).join('')}</tbody></table></div>` : '<p class="muted">Žádné žádosti.</p>'}`;
     }
 
-    async function approveUser(id) {
+    function approveUser(id) {
       const user = state.users.find(u => u.id === id);
       if (!user) return;
       user.approved = true;
       user.active = true;
-      await window.firebaseServices.updateDoc(window.firebaseServices.doc(window.firebaseServices.db, 'users', id), {
-        approved: true,
-        active: true
-      });
       saveState();
-      await syncUsersFromFirestore();
       renderAdmin();
     }
 
-    async function rejectUser(id) {
+    function rejectUser(id) {
       state.users = state.users.filter(u => u.id !== id);
-      await window.firebaseServices.deleteDoc(window.firebaseServices.doc(window.firebaseServices.db, 'users', id));
       saveState();
-      await syncUsersFromFirestore();
       renderAdmin();
     }
 
-    async function toggleUserActive(id) {
+    function toggleUserActive(id) {
       const user = state.users.find(u => u.id === id);
       if (!user) return;
       user.active = !user.active;
-      await window.firebaseServices.updateDoc(window.firebaseServices.doc(window.firebaseServices.db, 'users', id), {
-        active: user.active
-      });
       saveState();
-      await syncUsersFromFirestore();
       renderAdmin();
     }
 
-    async function allowAttempt(id) {
+    function allowAttempt(id) {
       const user = state.users.find(u => u.id === id);
       if (!user) return;
       user.attemptsAllowed += 1;
-      await window.firebaseServices.updateDoc(window.firebaseServices.doc(window.firebaseServices.db, 'users', id), {
-        attemptsAllowed: user.attemptsAllowed
-      });
       saveState();
-      await syncUsersFromFirestore();
       renderAdmin();
     }
 
-    async function deleteUser(id) {
-      const user = state.users.find(u => u.id === id);
-      if (!user) return;
-      if (!confirm(`Opravdu chcete smazat uživatele ${user.username}?`)) return;
-
-      state.tests = state.tests.filter(t => t.userId !== id);
-      state.answerRequests = state.answerRequests.filter(r => r.userId !== id);
-      state.users = state.users.filter(u => u.id !== id);
-      if (state.currentUserId === id) state.currentUserId = null;
-
-      const { db, doc, deleteDoc, collection, getDocs } = window.firebaseServices;
-      await deleteDoc(doc(db, 'users', id));
-      const testsSnap = await getDocs(collection(db, 'tests'));
-      for (const item of testsSnap.docs.filter(d => d.data().userId === id)) {
-        await deleteDoc(doc(db, 'tests', item.id));
-      }
-      const reqSnap = await getDocs(collection(db, 'answerRequests'));
-      for (const item of reqSnap.docs.filter(d => d.data().userId === id)) {
-        await deleteDoc(doc(db, 'answerRequests', item.id));
-      }
-
-      saveState();
-      await syncAllFirestoreData();
-      renderAdmin();
-    }
-
-    async function adminCreateUser() {
+    function adminCreateUser() {
       const username = document.getElementById('adminCreateUsername').value.trim();
       const email = document.getElementById('adminCreateEmail').value.trim().toLowerCase();
       const password = document.getElementById('adminCreatePassword').value;
       const role = document.getElementById('adminCreateRole').value;
       if (!username || !email || !password) return alert('Vyplňte všechna pole.');
-      try {
-        const { createUserWithEmailAndPassword, secondaryAuth, db, doc, setDoc, serverTimestamp } = window.firebaseServices;
-        const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
-        await setDoc(doc(db, 'users', cred.user.uid), {
-          username,
-          email,
-          role,
-          approved: true,
-          active: true,
-          attemptsAllowed: role === 'admin' ? 99 : 1,
-          createdByAdmin: true,
-          createdAt: serverTimestamp()
-        });
-        await secondaryAuth.signOut();
-        await syncUsersFromFirestore();
-        renderAdmin();
-        alert('Účet byl vytvořen.');
-      } catch (error) {
-        alert('Vytvoření účtu selhalo: ' + (error.message || error));
-      }
+      if (state.users.some(u => u.username === username || u.email === email)) return alert('Uživatel nebo e-mail už existuje.');
+      state.users.push({ id: uid(), username, email, password, role, approved: true, active: true, attemptsAllowed: role === 'admin' ? 99 : 1, createdByAdmin: true });
+      saveState();
+      renderAdmin();
+      alert('Účet byl vytvořen.');
     }
 
     function addQuestion() {
@@ -1421,20 +1282,13 @@
       alert('Otázka byla přidána.');
     }
 
-    async function approveAnswerRequest(id) {
+    function approveAnswerRequest(id) {
       const request = state.answerRequests.find(r => r.id === id);
       if (!request) return;
       request.status = 'schváleno';
       const test = state.tests.find(t => t.id === request.testId);
       if (test) test.allowCorrectAnswers = true;
-      await window.firebaseServices.updateDoc(window.firebaseServices.doc(window.firebaseServices.db, 'answerRequests', id), {
-        status: 'schváleno'
-      });
-      if (test) {
-        await persistTestToFirestore(test);
-      }
       saveState();
-      await syncAllFirestoreData();
       renderAdmin();
     }
 
@@ -1446,248 +1300,8 @@
       if (getActiveTest()) invalidateCurrentTest('zrušený');
     });
 
-    async function syncUsersFromFirestore() {
-      if (!window.firebaseServices?.db) return;
-      const snap = await window.firebaseServices.getDocs(window.firebaseServices.collection(window.firebaseServices.db, 'users'));
-      state.users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    }
-
-    let usersUnsubscribe = null;
-    let testsUnsubscribe = null;
-    let answerRequestsUnsubscribe = null;
-
-    function startRealtimeSync() {
-      if (!window.firebaseServices?.db) return;
-
-      if (usersUnsubscribe) usersUnsubscribe();
-      usersUnsubscribe = window.firebaseServices.onSnapshot(
-        window.firebaseServices.collection(window.firebaseServices.db, 'users'),
-        snapshot => {
-          state.users = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-          saveState();
-          const current = getCurrentUser();
-          if (!current) return;
-          if (document.getElementById('screen-admin') && !document.getElementById('screen-admin').classList.contains('hidden') && current.role === 'admin') {
-            renderAdmin();
-          }
-          if (document.getElementById('screen-user') && !document.getElementById('screen-user').classList.contains('hidden') && current.role === 'user') {
-            renderUser();
-          }
-        }
-      );
-
-      const current = getCurrentUser();
-      if (!current) return;
-
-      if (testsUnsubscribe) testsUnsubscribe();
-      const testsRef = current.role === 'admin'
-        ? window.firebaseServices.collection(window.firebaseServices.db, 'tests')
-        : window.firebaseServices.query(
-            window.firebaseServices.collection(window.firebaseServices.db, 'tests'),
-            window.firebaseServices.where('userId', '==', current.id)
-          );
-      testsUnsubscribe = window.firebaseServices.onSnapshot(testsRef, snapshot => {
-        state.tests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        saveState();
-        if (document.getElementById('screen-admin') && !document.getElementById('screen-admin').classList.contains('hidden') && current.role === 'admin') {
-          renderAdmin();
-        }
-        if (document.getElementById('screen-user') && !document.getElementById('screen-user').classList.contains('hidden') && current.role === 'user') {
-          renderUser();
-        }
-      });
-
-      if (answerRequestsUnsubscribe) answerRequestsUnsubscribe();
-      const requestsRef = current.role === 'admin'
-        ? window.firebaseServices.collection(window.firebaseServices.db, 'answerRequests')
-        : window.firebaseServices.query(
-            window.firebaseServices.collection(window.firebaseServices.db, 'answerRequests'),
-            window.firebaseServices.where('userId', '==', current.id)
-          );
-      answerRequestsUnsubscribe = window.firebaseServices.onSnapshot(requestsRef, snapshot => {
-        state.answerRequests = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-        saveState();
-        if (document.getElementById('screen-admin') && !document.getElementById('screen-admin').classList.contains('hidden') && current.role === 'admin') {
-          renderAdmin();
-        }
-        if (document.getElementById('screen-user') && !document.getElementById('screen-user').classList.contains('hidden') && current.role === 'user') {
-          renderUser();
-        }
-      });
-    }
-
-    function stopRealtimeSync() {
-      if (usersUnsubscribe) usersUnsubscribe();
-      if (testsUnsubscribe) testsUnsubscribe();
-      if (answerRequestsUnsubscribe) answerRequestsUnsubscribe();
-      usersUnsubscribe = null;
-      testsUnsubscribe = null;
-      answerRequestsUnsubscribe = null;
-    }
-
-    async function syncTestsFromFirestore() {
-      if (!window.firebaseServices?.db) return;
-      const current = getCurrentUser();
-      if (!current) {
-        state.tests = [];
-        return;
-      }
-      const snap = current.role === 'admin'
-        ? await window.firebaseServices.getDocs(window.firebaseServices.collection(window.firebaseServices.db, 'tests'))
-        : await window.firebaseServices.getDocs(window.firebaseServices.query(
-            window.firebaseServices.collection(window.firebaseServices.db, 'tests'),
-            window.firebaseServices.where('userId', '==', current.id)
-          ));
-      state.tests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    }
-
-    async function syncAnswerRequestsFromFirestore() {
-      if (!window.firebaseServices?.db) return;
-      const current = getCurrentUser();
-      if (!current) {
-        state.answerRequests = [];
-        return;
-      }
-      const snap = current.role === 'admin'
-        ? await window.firebaseServices.getDocs(window.firebaseServices.collection(window.firebaseServices.db, 'answerRequests'))
-        : await window.firebaseServices.getDocs(window.firebaseServices.query(
-            window.firebaseServices.collection(window.firebaseServices.db, 'answerRequests'),
-            window.firebaseServices.where('userId', '==', current.id)
-          ));
-      state.answerRequests = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    }
-
-    async function syncAllFirestoreData() {
-      await syncUsersFromFirestore();
-      await syncTestsFromFirestore();
-      await syncAnswerRequestsFromFirestore();
-      saveState();
-    }
-
-    async function persistTestToFirestore(test) {
-      if (!window.firebaseServices?.db || !test) return;
-      const payload = {
-        ...test,
-        updatedAt: new Date().toISOString()
-      };
-      await window.firebaseServices.setDoc(window.firebaseServices.doc(window.firebaseServices.db, 'tests', test.id), payload);
-    }
-
-    async function bootstrapFirestoreDefaults() {
-      const usersSnap = await window.firebaseServices.getDocs(window.firebaseServices.collection(window.firebaseServices.db, 'users'));
-      if (!usersSnap.empty) return;
-      try {
-        const adminCred = await window.firebaseServices.createUserWithEmailAndPassword(window.firebaseServices.secondaryAuth, 'admin@pcr.local', 'admin123');
-        await window.firebaseServices.setDoc(window.firebaseServices.doc(window.firebaseServices.db, 'users', adminCred.user.uid), {
-          username: 'admin',
-          email: 'admin@pcr.local',
-          role: 'admin',
-          approved: true,
-          active: true,
-          attemptsAllowed: 99,
-          createdByAdmin: true,
-          createdAt: window.firebaseServices.serverTimestamp()
-        });
-        await window.firebaseServices.secondaryAuth.signOut();
-
-        const userCred = await window.firebaseServices.createUserWithEmailAndPassword(window.firebaseServices.secondaryAuth, 'uchazec@demo.cz', 'demo123');
-        await window.firebaseServices.setDoc(window.firebaseServices.doc(window.firebaseServices.db, 'users', userCred.user.uid), {
-          username: 'uchazec',
-          email: 'uchazec@demo.cz',
-          role: 'user',
-          approved: true,
-          active: true,
-          attemptsAllowed: 1,
-          createdByAdmin: true,
-          createdAt: window.firebaseServices.serverTimestamp()
-        });
-        await window.firebaseServices.secondaryAuth.signOut();
-      } catch (error) {
-        console.error('Bootstrap účtů selhal:', error);
-      }
-    }
-
-    async function initializeFirebaseState() {
-      if (!window.firebaseServices?.auth) {
-        renderTopActions();
-        showScreen('home');
-        return;
-      }
-      await bootstrapFirestoreDefaults();
-      window.firebaseServices.onAuthStateChanged(window.firebaseServices.auth, async (firebaseUser) => {
-        if (!firebaseUser) {
-          stopRealtimeSync();
-          state.currentUserId = null;
-          state.tests = [];
-          state.answerRequests = [];
-          saveState();
-          renderTopActions();
-          showScreen('home');
-          return;
-        }
-        state.currentUserId = firebaseUser.uid;
-        await syncAllFirestoreData();
-        startRealtimeSync();
-        const current = getCurrentUser();
-        renderTopActions();
-        showScreen(current?.role === 'admin' ? 'admin' : 'user');
-      });
-    }
-
-    window.firebaseReadyHandler = initializeFirebaseState;
-
     renderTopActions();
     showScreen('home');
   </script>
-
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js";
-  import { getFirestore, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, collection, getDocs, query, where, serverTimestamp, onSnapshot } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js";
-  import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyAwftViQjMSQy9zzUrGGEGf7UIJUAKacAw",
-    authDomain: "pcrtesty-3f1ba.firebaseapp.com",
-    projectId: "pcrtesty-3f1ba",
-    storageBucket: "pcrtesty-3f1ba.firebasestorage.app",
-    messagingSenderId: "925881328820",
-    appId: "1:925881328820:web:b7fe5f3603ae4c9b5de3e1",
-    measurementId: "G-G77RXMKN5F"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const secondaryApp = initializeApp(firebaseConfig, 'Secondary');
-  const db = getFirestore(app);
-  const auth = getAuth(app);
-  const secondaryAuth = getAuth(secondaryApp);
-
-  window.firebaseServices = {
-    db,
-    auth,
-    secondaryAuth,
-    doc,
-    getDoc,
-    setDoc,
-    addDoc,
-    updateDoc,
-    deleteDoc,
-    collection,
-    getDocs,
-    query,
-    where,
-    serverTimestamp,
-    onSnapshot,
-    signInWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged,
-    createUserWithEmailAndPassword
-  };
-
-  console.log("🔥 Firebase připojen");
-  if (window.firebaseReadyHandler) {
-    window.firebaseReadyHandler();
-  }
-</script>
-
 </body>
 </html>
